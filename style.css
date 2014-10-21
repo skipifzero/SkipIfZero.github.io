@@ -4,7 +4,7 @@
 
 body, html
 {
-	background-color: #646464;
+	background-color: #000000;
 	margin: 0 auto;
 	height: auto;
 	color: #333333;
@@ -43,7 +43,7 @@ body, html
 
 #page-middle
 {
-	background-color: #C0C0C0;
+	background-color: #646464;
 	min-height: 20em;
 
 	padding-top: 1em;
@@ -84,4 +84,50 @@ body, html
 	padding-right: 0.8em;
 	
 	margin-top: 1em;
+}
+
+
+/* Headings and text formatting */
+
+h1 /* Title */
+{
+	margin: 0 auto;
+	font-size: 1.75em;
+}
+
+h2 /* Subtitle */
+{
+	margin: 0 auto;
+	font-size: 1.25em;
+}
+
+h3 /* Image text */
+{
+	margin: 0 auto;
+	font-size: 1em;
+	font-weight: normal;
+	font-style: italic;
+}
+
+h4 /* Footer text */
+{
+	margin: 0 auto;
+	font-size: 0.9em;
+}
+
+a
+{
+	color: inherit;
+	text-decoration: none;
+}
+
+a:hover
+{
+	color: #757575;
+}
+
+a:visited
+{
+	color: inherit;
+	text-decoration: none;
 }
