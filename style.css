@@ -58,8 +58,8 @@ body, html
 {
 	background-color: #F0F0F0;
 
-	padding-top: 0.25em;
-	padding-bottom: 0.25em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
 	padding-left: 1.5em;
 	padding-right: 1.5em;
 
@@ -76,15 +76,15 @@ body, html
 	background-color: inherit;
 
 	padding-top: 1em;
-	padding-bottom: 1em;
+	padding-bottom: 2em;
 }
 
 #page-bottom-footer
 {
 	background-color: #F0F0F0;
 
-	padding-top: 1em;
-	padding-bottom: 1em;
+	padding-top: 1.2em;
+	padding-bottom: 1.1em;
 	padding-left: 1.5em;
 	padding-right: 1.5em;
 	
