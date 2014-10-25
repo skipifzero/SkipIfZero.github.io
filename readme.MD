@@ -1,6 +1,4 @@
 # SkipIfZero's website
-
-## About
 This is the repo for the official website of SkipIfZero. It's also hosted on Github and can be found at the following urls:
 
 	http://skipifzero.com
