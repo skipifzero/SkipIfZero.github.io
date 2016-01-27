@@ -2,6 +2,7 @@
 layout: post
 title: "Blog launch"
 categories: misc
+comments: true
 ---
 
 # Blog launch
