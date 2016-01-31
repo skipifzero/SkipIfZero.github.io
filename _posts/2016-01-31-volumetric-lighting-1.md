@@ -48,11 +48,11 @@ This is not very intuitive to understand, so take a look at this graph instead:
 
 ![weight graph](/assets/posts/2016-01-31-volumetric-lighting-1/weight_graph.jpg)
 
-The weight for a given sample is the area under the graph for the distance the sample covers. The total area for all samples (given that we only sample from 0 to d~max~) is 1. The weight decreases the further away from the camera a sample is, and after d~max~ the light contributes nothing to the final image at all. In practice I'm going to approximate the weights somewhat:
+The weight for a given sample is the area under the graph for the distance the sample covers. The total area for all samples (given that we only sample from 0 to d<sub>max</sub>) is 1. The weight decreases the further away from the camera a sample is, and after d<sub>max</sub> the light contributes nothing to the final image at all. In practice I'm going to approximate the weights somewhat:
 
 ![weighted graph approximation](/assets/posts/2016-01-31-volumetric-lighting-1/weight_graph_approx.jpg)
 
-In the above example the weight for the first sample s~1~ is going to be the range covered (d~max~ / 4) times f(s~1~).
+In the above example the weight for the first sample s<sub>1</sub> is going to be the range covered (d<sub>max</sub> / 4) times f(s<sub>1</sub>).
 
 
 ## Light model
