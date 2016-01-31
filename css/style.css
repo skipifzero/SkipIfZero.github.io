@@ -149,6 +149,11 @@ body, html
 
 /* Headings */
 
+p
+{
+	line-height: 1.5em;
+}
+
 h1
 {
 	font-size: 2.5em;
@@ -240,12 +245,28 @@ code
 	display: inline-block;
 	padding: 0em 0.25em;
 	box-sizing: border-box;
+	line-height: 1.5em;
 }
 
 pre code
 {
 	width: 100%;
 	padding: 1em 1.25em;
+}
+
+table
+{
+	border: 1px solid #AAAAAA;
+	background-color: #E8E8E8;
+	border-collapse: collapse;
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+
+th, td
+{
+	border: 1px solid #AAAAAA;
+	padding: 0.45em 0.35em;
 }
 
 /* Responsive design */
