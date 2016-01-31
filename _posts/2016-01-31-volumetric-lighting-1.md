@@ -123,7 +123,7 @@ We have some noticeable banding artifacts on the volumetric light. The reason fo
 
 ## Performance
 
-I'm going to test on 3 different configurations, a desktop with Nvidia GTX 980Ti, a laptop with Nvidia GTX 970M and the same laptop with Intel HD Graphics 4600. The rendering resolution is always 2560x1440, but the volumetric lighting is going to be rendered both at full resolution (2560x1440) and at quarter resolution (1280x720). Number of samples per pixel is 128 unless otherwise noted.
+I'm going to test on 3 different configurations, a desktop with Nvidia GTX 980Ti, a laptop with Nvidia GTX 970M and the same laptop with Intel HD Graphics 4600. The rendering resolution is always 2560x1440, but the volumetric lighting is going to be rendered both at full resolution (2560x1440) and at quarter resolution (1280x720). Number of samples per pixel is 128 unless otherwise noted. The resolution of the shadow map (for the volumetric lighting, not the standard shading) is 256x256, which I have found to give quite nice results will still being relatively cheap to sample from multiple times.
 
 The test program will be [this commit of snakium-cubed](https://github.com/SkipIfZero/snakium-cubed/commit/1c7a700c03b596042ee2954fbf2c565707d2b01c) (with one spotlight). The test will be done by starting a new game and letting it run for a while without touching anything. This particular test includes the camera being in most relevant positions relative to the spotlight.
 
