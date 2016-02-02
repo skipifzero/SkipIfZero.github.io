@@ -1,0 +1,265 @@
+---
+layout: post
+title: "Volumetric lighting 2"
+categories: graphics
+comments: true
+---
+
+# Volumetric lighting 2 - Intersection test
+
+My last post discussed the naive implementation of volumetric lighting. One of the problems we identified was that we wasted precious samples by sampling outside the spotlight cone, which we will now rectify. We will accomplish this by performing a ray vs cone intersection test to figure out where the cone starts and where it ends along ray. Then we can simply sample between these two points instead of all the way from the camera to the object.
+
+The [Real-Time Rendering website has a list of intersection tests](http://www.realtimerendering.com/intersections.html). Unfortunately I was not really happy with the ray vs cone tests (many branches, small stuff I was too stupid to see the point of, etc.). This combined with the fact that I can be irritatingly stubborn about understanding what I’m doing and general [NIH:ism](https://en.wikipedia.org/wiki/Not_invented_here) quickly led me to the decision to do the math myself and make my own test.
+
+## The math
+
+![ray vs cone](/assets/posts/2016-02-02-volumetric-lighting-2/ray_vs_cone.jpg)
+
+The image above shows a mathematical representation of a cone and a line. The cone is defined by:
+
+$$ P_{\text{cone}}: ~ \text{position} $$
+
+$$ D_{\text{cone}}: ~ \text{normalized direction} $$
+
+$$ \alpha: ~ \text{(half) opening angle}$$
+
+The line is defined by:
+
+$$ P_{\text{ray}}: ~ \text{start position of ray} $$
+
+$$ D_{\text{ray}}: ~ \text{normalized direction of line in ray direction} $$
+
+In addition we have **X**, which is a point at which the line intersects the cone, i.e. what we are after. We know that **X** must be a point on the line, so we can write it as a function instead:
+
+$$ X(t) = P_{\text{ray}} + t \cdot D_{\text{ray}} $$
+
+In other words, go **t** amount in ray direction and you up at **X**. This is just the definition of a line, nothing fancy. Now we just need to enter the information about the cone. We can do that by creating a vector from **P<sub>cone</sub>** to **X**, if **X** is an intersection point this vector will lie on the surface of the cone. This means that the angle between this vector and **D<sub>cone</sub>** must be **α**. This gives us the following equation:
+
+$$ \text{dot}(D_{cone}, ~norm(X(t) - P_{\text{cone}})) = \cos(\alpha) $$
+
+or alternatively the equivalent:
+
+$$ \text{dot}(D_{cone}, ~ X(t) - P_{\text{cone}}) = \text{length}(X(t) - P_{\text{cone}}) \cos(\alpha) $$
+
+So this is the equation we need to expand and simplify in-order to implement the intersection test. If you look at the second version of the equation we have a **length()** operation, which contains a square root operation. We need to square both sides to remove this square root. This has the consequence that the equation will start allowing false solutions from a mirrored cone in the opposite direction.
+
+![mirrored cone](/assets/posts/2016-02-02-volumetric-lighting-2/mirrored_cone.jpg)
+
+This is not really a huge problem for now, but we will have to handle it later on. But without further ado, here is the expanded version:
+
+$$ (\text{dot}(D_{\text{cone}}, D_{\text{ray}})^2 - \cos(\alpha)^2)t^2 + $$
+
+$$ 2\cdot(\text{dot}(D_{\text{cone}}, P_{\text{ray}} -  P_{\text{cone}})^2 - \cos(\alpha)^2 \text{dot}(P_{\text{ray}} -  P_{\text{cone}}, D_{\text{ray}}))t + $$
+
+$$ (\text{dot}(D_{\text{cone}}, P_{\text{ray}} -  P_{\text{cone}})^2 - \cos(\alpha)^2 \text{dot}(P_{\text{ray}} -  P_{\text{cone}}, P_{\text{ray}} -  P_{\text{cone}}) = 0 $$
+
+The only unknown variable is **t**, so this is clearly a quadratic equation. We know how to solve those!
+
+$$ ax^2 + bx + c = 0 $$
+
+$$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}, ~\text{if} ~ b^2 - 4ac \geq 0 $$
+
+And with this we have everything we need for a line vs infinite mirrored cone intersection test.  This is a good start, but it is obviously not enough for our purposes.
+
+## Ray vs spotlight test
+
+So what we actually want is ray vs spotlight intersection test. We have the math for finding intersections on the cone part, but our spotlights have a limited range. We could imagine that the actual shape of our spotlight is a cone bound by a sphere.
+
+![surface of interest](/assets/posts/2016-02-02-volumetric-lighting-2/surface_of_interest.jpg)
+
+So it is not enough to check for intersections against the cone, we also need to check against the bounding sphere. Luckily an intersection test against a sphere is way easier to create than against a cone, so if you are interested in the details I recommend [checking the Real-Time Rendering website.](http://www.realtimerendering.com/intersections.html)
+
+If we calculate these two intersection tests and have a potential hit we have 4 different values for **t**. We can't hit the spotlight 4 different times with same ray, in fact we are always going to hit it 2 times (if we start inside the spotlight we want to return the ray position itself as the first intersection). We need to somehow filter out the values we are actually interested in, i.e. the values on the spotlight surface.
+
+So what we are going to do is manually check each **t** and see if they are on the valid surface. If we get 2 values we likely have a hit. We sort these 2 values and get 3 possible cases:
+
+* Both points are behind start of ray -> no hit
+* One point is behind and one is ahead of start of ray -> hit
+* Both points are ahead of start of ray -> hit
+
+In the third case we can just return the two values. In the second case we need to return the start position of the ray as the first intersection.
+
+## Implementation
+
+The following code snippet is the complete implementation of the ray vs spotlight intersection test (minus the line vs sphere test). Specific details will be explained in comments.
+
+~~~glsl
+// Result of an intersection test. t1 and t2 is the amount needed to move in ray direction. 
+// If hit is false t1 and t2 can contain anything, otherwise t1 <= t2.
+struct Intersection {
+	bool hit;
+	float t1, t2;
+};
+
+// coneDir and rayDir must be normalized
+// cosConeAngle == cos(coneAngle) == cos(coneFov / 2)
+Intersection lineVsInfiniteMirroredCone(vec3 linePos, vec3 lineDir,
+                                        vec3 conePos, vec3 coneDir, float coneCosAngle)
+{
+	// Simplifications
+	float cos2 = coneCosAngle * coneCosAngle;
+	float dirsDot = dot(coneDir, lineDir);
+	vec3 lineToCone = linePos - conePos;
+	float coneDirDotLineToCone = dot(coneDir, lineToCone);
+
+	// Calculations
+	// ax² + bx + c = 0
+	// x = (-b [+-] sqrt(b¹ - 4ac)) / (2a)
+	float a = (dirsDot * dirsDot) - cos2;
+	float b = 2.0 * (coneDirDotLineToCone * dirsDot - cos2 * dot(lineToCone, lineDir));
+	float c = coneDirDotLineToCone * coneDirDotLineToCone - cos2 * dot(lineToCone, lineToCone);
+
+	// sqrt(b¹ - 4ac)
+	// if inner factor is below zero there is no solution, i.e. no hit
+	float sqrtInner = b * b - 4 * a * c;
+	if (sqrtInner < 0) {
+		return Intersection(false, 0.0, 0.0);
+	}
+
+	// Calculate closest and farthest points
+	float sqrtProd = sqrt(sqrtInner);
+	float a2 = 2 * a;
+	float t1 = (-b - sqrtProd) / a2;
+	float t2 = (-b + sqrtProd) / a2;
+
+	return Intersection(true, t1, t2);
+}
+
+// coneDir and rayDir must be normalized
+// cosConeAngle == cos(coneAngle) == cos(coneFov / 2)
+Intersection rayVsSpotlight(vec3 rayPos, vec3 rayDir,
+                            vec3 conePos, vec3 coneDir,
+                            float coneCosAngle, float coneRange)
+{
+	Intersection coneIsect = lineVsInfiniteMirroredCone(rayPos, rayDir, conePos, coneDir, coneCosAngle);
+
+	// Early rejection test, if infinite mirrored cone was not hit there is no point in continuing
+	if (!coneIsect.hit) {
+		return Intersection(false, 0, 0);
+	}
+
+	// Calculate intersection points for infinite mirrored cone and sphere
+	Intersection sphereIsect = lineVsSphere(rayPos, rayDir, conePos, coneRange);
+	vec3 c1 = rayPos + rayDir * coneIsect.t1;
+	vec3 c2 = rayPos + rayDir * coneIsect.t2;
+	vec3 s1 = rayPos + rayDir * sphereIsect.t1;
+	vec3 s2 = rayPos + rayDir * sphereIsect.t2;
+
+	// Calculate vectors from conePos to the intersection points
+	vec3 coneToC1 = c1 - conePos;
+	vec3 coneToC2 = c2 - conePos;
+	vec3 coneToS1 = s1 - conePos;
+	vec3 coneToS2 = s2 - conePos;
+
+	// Try to find 2 points which intersects the real cone
+	float hits[4]; // Needs 4 for literal edge cases.
+	int index = 0;
+
+	// Manually check if each intersection point is on valid surface
+	if (dot(coneToC1, coneDir) > 0 && length(coneToC1) < coneRange) {
+		hits[index++] = coneIsect.t1;
+	}
+	if (dot(coneToC2, coneDir) > 0 && length(coneToC2) < coneRange) {
+		hits[index++] = coneIsect.t2;
+	}
+	if (dot(normalize(coneToS1), coneDir) > coneCosAngle) {
+		hits[index++] = sphereIsect.t1;
+	}
+	if (dot(normalize(coneToS2), coneDir) > coneCosAngle) {
+		hits[index++] = sphereIsect.t2;
+	}
+
+	// Sort the 2 found intersection points
+	float closest = min(hits[0], hits[1]);
+	float farthest = max(hits[0], hits[1]);
+
+	// At this point we two intersection points, there are
+	// three possible cases:
+	// 1: Both points are behind rayPos -> no hit
+	// 2: One point is behind and one is ahead of rayPos
+	// 3: Both points are ahead of rayPos
+	// In the case of 2 the first intersection will actually be
+	// inside the spotlight and therefore 0.
+
+	// if (index != 2) return Intersection(false, 0, 0);
+	//
+	// Case where both intersections are behind ray
+	// if (farthest < 0) return Intersection(false, 0, 0);
+	//
+	// Case where closest is behind ray (can only happen when ray starts inside finite cone)
+	// else if (closest < 0) return Intersection(true, 0, farthest);
+	//
+	// Case where both intersections are ahead of ray
+	// else return Intersection(true, closest, farthest);
+	return Intersection(index == 2 && farthest >= 0, max(0, closest), max(0, farthest));
+}
+~~~
+
+Puh, that's a lot of code! Hopefully it is somewhat clear what we are doing.
+
+
+## No sampling
+
+Before we start improving our naive shader it might be interesting to try out an approach where we only use the intersection test and ignore the shadow map. This will of course not give us any shadows (the light will shine through any and all objects), but it will hopefully be substantially cheaper to compute. If it looks good enough it could be included in a potential product as a setting for weaker hardware.
+
+~~~ glsl
+float endT, startT = ... ; // Results from intersection test
+
+// Take 16 samples without sampling the shadow map
+// Still needs the samples because of other light properties
+float sampleStep = (endT - startT) / 15.0;
+float factor = 0.0;
+for (int i = 0; i < 16; ++i) {
+	float sampleT = startT + float(i) * sampleStep;
+	vec3 samplePos = sampleT * rayDir;
+
+	float falloff = calcLightFalloff(samplePos);
+	float attenuation = calcLightAttenuation(samplePos);
+	float eyeDistWeight = eyeWeightM + eyeWeightK * sampleT;
+	float weight = eyeDistWeight * sampleStep;
+
+	factor += falloff * attenuation * weight;
+}
+~~~
+
+![naive marching vs no sampling](/assets/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_no_sampling.png)
+
+
+## Marching with intersection test
+
+It is finally time to combine the full marching with the intersection test. The code will be practically identical to the no sampling variant, except we also sample the shadow map and the number of samples depend on the user setting.
+
+![naive marching vs test + marching](/assets/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_test_plus_marching.png)
+
+As can be seen in the comparison a lot of the banding artifacts just disappear and the result looks much better in general. This is because we don't waste any samples outside the spotlight and instead have more of them in the region where they actually matter.
+
+## Performance
+
+So, how is the performance of our new shaders? Is the intersection test prohibitively expensive to compute? Let us look at some numbers.
+
+**2560x1440** | **980Ti** | Avg | Std | Max | **970M** | Avg | Std | Max | **HD 4600** | Avg | Std
+-|-|-|-|-|-|-|-|-|-|-|-
+**Baseline**              | **#** | 1.5 | 0.1 | 1.9  | **#** | 7.9   | 5.3 | 20   | **#** | 27.1  | 2
+**Naive marching**        | **#** | 5.6 | 1.8 | 9.6  | **#** | 18.5  | 5.6 | 30.8 | **#** | 102   | 35
+**Test - No sampling**    | **#** | 1.9 | 0.3 | 2.7  | **#** | 8.7   | 5.3 | 20.6 | **#** | 33.3  | 5
+**Test - Naive marching** | **#** | 5.3 | 2   | 11.4 | **#** | 17.5  | 6   | 49   | **#** | 101   | 41.5
+
+
+**1280x720** | **980Ti** | Avg | Std | Max | **970M** | Avg | Std | Max | **HD 4600** | Avg | Std
+-|-|-|-|-|-|-|-|-|-|-|-
+**Baseline**              | **#** | 1.5 | 0.1 | 1.9  | **#** | 7.9  | 5.4 | 20.4 | **#** | 24.5  | 2.4
+**Naive marching**        | **#** | 2.6 | 0.6 | 4.3  | **#** | 10.5 | 5.1 | 41.2 | **#** | 43.7  | 9.8
+**Test - No sampling**    | **#** | 1.6 | 0.1 | 2.3  | **#** | 8.1  | 5.4 | 34.5 | **#** | 26.2  | 2.5
+**Test - Naive marching** | **#** | 2.5 | 0.6 | 11.2 | **#** | 10.3 | 5.2 | 21.2 | **#** | 44.2  | 11.6
+
+![perf graph 2560x1440](/assets/posts/2016-02-02-volumetric-lighting-2/perf_graph_1440.png)
+
+![perf graph 1280x720](/assets/posts/2016-02-02-volumetric-lighting-2/perf_graph_720.png)
+
+So this is interesting, it seems that this new approach is in general as fast or faster than the naive marching! It is not very surprising since we should be able to do a bit more early rejection if we know a ray will not hit a spotlight. But it is still nice to have improved the quality and the performance at the same time. As for the no sampling variant it is actually quite fast. Given a bit of implementation optimization it should be very feasible to have it as an option for low performing hardware.
+
+So, one could say that we have accomplished what we set out to do. We have significantly improved the quality without any loss of performance. If we lower the number of samples we should get something that looks close to our original shader, but with way better performance. So are we content?
+
+No.
+
+Next post will focus on optimization and making this thing run faster.
