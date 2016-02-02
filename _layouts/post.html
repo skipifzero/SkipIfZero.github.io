@@ -17,7 +17,7 @@ layout: post
 
 			<div class="page-middle-post-header">
 				{{ page.title }} 
-				<div style="float: right;"> {{ page.date | date: "%Y-%m-%-d" }} </div>
+				<div style="float: right;"> {{ page.date | date: "%Y-%m-%d" }} </div>
 			</div>
 
 			{{ content }}
@@ -41,7 +41,7 @@ layout: post
 					var disqus_config = function () {
 						this.page.identifier = '{{ page.url }}';
 						this.page.url = '{{ page.url | prepend: site.url }}';
-						this.page.title = '{{ page.date | date: "%Y-%m-%-d" }} - {{ page.title }}';
+						this.page.title = '{{ page.date | date: "%Y-%m-%d" }} - {{ page.title }}';
 					};
 					(function() {  // DON'T EDIT BELOW THIS LINE
 						var d = document, s = d.createElement('script');
