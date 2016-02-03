@@ -237,7 +237,7 @@ As can be seen in the comparison a lot of the banding artifacts just disappear a
 
 So, how is the performance of our new shaders? Is the intersection test prohibitively expensive to compute? Let us look at some numbers.
 
-**2560x1440** | **980Ti** | Avg | Std | Max | **970M** | Avg | Std | Max | **HD 4600** | Avg | Std
+**2560x1440** | **980Ti** | Avg | SD | Max | **970M** | Avg | SD | Max | **HD 4600** | Avg | SD
 -|-|-|-|-|-|-|-|-|-|-|-
 **Baseline**              | **#** | 1.5 | 0.1 | 1.9  | **#** | 7.9   | 5.3 | 20   | **#** | 27.1  | 2
 **Naive marching**        | **#** | 5.6 | 1.8 | 9.6  | **#** | 18.5  | 5.6 | 30.8 | **#** | 102   | 35
@@ -245,7 +245,7 @@ So, how is the performance of our new shaders? Is the intersection test prohibit
 **Test - Naive marching** | **#** | 5.3 | 2   | 11.4 | **#** | 17.5  | 6   | 49   | **#** | 101   | 41.5
 
 
-**1280x720** | **980Ti** | Avg | Std | Max | **970M** | Avg | Std | Max | **HD 4600** | Avg | Std
+**1280x720** | **980Ti** | Avg | SD | Max | **970M** | Avg | SD | Max | **HD 4600** | Avg | SD
 -|-|-|-|-|-|-|-|-|-|-|-
 **Baseline**              | **#** | 1.5 | 0.1 | 1.9  | **#** | 7.9  | 5.4 | 20.4 | **#** | 24.5  | 2.4
 **Naive marching**        | **#** | 2.6 | 0.6 | 4.3  | **#** | 10.5 | 5.1 | 41.2 | **#** | 43.7  | 9.8
