@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Volumetric lighting 2"
+title: "Volumetric lighting 3"
 categories: graphics
 comments: true
 ---
