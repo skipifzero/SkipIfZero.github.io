@@ -8,3 +8,5 @@ github_username: PetorSFZ
 
 # Build settings
 markdown: kramdown
+
+highlighter: rouge
