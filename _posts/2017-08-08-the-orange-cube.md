@@ -59,7 +59,7 @@ Success! Looking back I should not have done this so late at night, I was way to
 
 At this point I also got a bit of the usual oh-god-what-am-I-doing panic that usually sets in when modding hardware. These things seem a lot easier in tutorials, then you open up the hardware yourself and everything is a lot smaller than they appeared in the instructions. In my experience the best way to continue is to try to stay calm and continue on slowly but carefully. Most of the times things turn out fine in the end, but there has been times where everything just broke. That's a risk one has to accept.
 
-## Installing a HDMI port
+## Installing an HDMI port
 
 The GameCube has a digital and an analog output port. The analog port can at best output 576i ([interlaced](https://en.wikipedia.org/wiki/Interlaced_video)) through an RGB [SCART](https://en.wikipedia.org/wiki/SCART) cable. SCART itself is kind of a problem because modern TVs do not have good support for the port, and often have bad internal scalers to scale up the image. In addition, the interlaced signal often looks terrible on big LCD TVs.
 
