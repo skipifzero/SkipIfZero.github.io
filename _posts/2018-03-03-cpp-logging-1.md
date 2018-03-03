@@ -1,0 +1,251 @@
+---
+layout: post
+title: "C++ Logging (Part 1)"
+categories: development
+comments: true
+---
+
+# C++ Logging (Part 1)
+
+Hi again everyone! It has been quite some time huh? Since last summer I've been working on and off on a game engine I'm calling [Phantasy Engine](https://github.com/PhantasyEngine). It's still in the early stages, but there have been some interesting problems I've had to solve. This post is not about the more advanced and interesting problems[^1], it is about logging!
+
+So by logging I simply mean the common act of printing out messages to the user, or more often the developer, of the program. A simple example using the C standard library:
+
+~~~cpp
+printf("%s\n", "Attempting to foo()");
+bool success = foo();
+if (!success) {
+    fprintf(stderr, "%s\n", "Failed to foo()");
+}
+~~~
+
+The above is quite simple and works fine most of the time, but there are a number of features one might want when the size of the codebase increases. This post will detail some features one might want and how I have attempted to solve them.
+
+## Features
+
+### Redirecting output
+
+One of the most obvious features one might want is the ability to redirect output somewhere else than the terminal. For example you might want to write to a file instead so you can look at the log after the program has run. Perhaps you might even want to print the text to some in-engine info window.
+
+The important thing here is that you want to be able to change where and how the messages are logged without changing the code that logged the message itself in the first place. A fairly limited variant can easily be accomplished using the C standard library by passing around `FILE*` pointers:
+
+~~~cpp
+void fooWrapper(FILE* logFile)
+{
+	bool success = foo();
+    if (!success) {
+        fprintf(logFile, "%s\n", "Failed to foo()");
+    }
+}
+~~~
+
+A more powerful way to accomplish the same thing would be to pass around function pointers or some sort of inheritance structure. An inheritance structure is probably a better choice in this case since we can't have any (instanced) state in a function. Example:
+
+~~~cpp
+class LoggingInterface {
+public:
+    virtual ~LoggingInterface() {}
+    virtual void log(const char* message) = 0;
+};
+
+void fooWrapper(LoggingInterface* logger)
+{
+	bool success = foo();
+    if (!success) {
+        logger->log("Failed to foo()");
+    }
+}
+~~~
+
+This way of passing around the logger instance is also fairly attractive because it avoids global state. It also becomes possible to have different loggers for different part of the codebase. The drawback is that you have to send around loggers everywhere.
+
+### Tags
+
+When logging many different things at the same time it can be useful to be able to filter messages depending on what type they are. This approach is utilized by [Android](https://developer.android.com/reference/android/util/Log.html)'s logging interface among others. To expand the previous example:
+
+~~~cpp
+class LoggingInterface {
+public:
+    virtual ~LoggingInterface() {}
+    virtual void log(const char* tag, const char* message) = 0;
+};
+
+void fooWrapper(LoggingInterface* logger)
+{
+	bool success = foo();
+    if (!success) {
+        logger->log("foo", "Failed to foo()");
+    }
+}
+~~~
+
+### Severity levels
+
+Another way of sorting among different messages is to split them into severity levels. A message could be an error message, but it could also be pure information, used only to figure out what the program has been doing.
+
+I have designed the severity levels so that they are in a strict hierarchy from least to most severe. That way I can filter to only show messages that are of a given severity or worse. My hierarchy:
+
+~~~cpp
+enum class LogLevel : uint32_t {
+	INFO_NOISY, // Extra detailed info that can normally be ignored
+	INFO, // Non-error related messages
+	WARNING, // Non-critical errors that might be fine to ignore
+	ERROR // More critical errors, will often result in a crash
+};
+
+~~~
+
+### Macro `__FILE__` and`__LINE__` 
+
+In C and C++ there are two very useful preprocessor macros for debugging and logging purposes, `__FILE__` and `__LINE__`. The first one returns a string (`const char*`) containing the filename of the file, the second one returns the line number of the file. Example:
+
+~~~cpp
+// File: test.cpp
+printf("%s:%i: %s\n", __FILE__, __LINE__, "A message"); // On line 15
+~~~
+
+The above will print `test.cpp:15: A message`. As you can probably guess this is very useful information to have as it allows you to easily tell what row of code generated a message.
+
+These macros introduce a complication though, the macros need to be used on each line we log from. I.e., at this point the logging function looks something like this:
+
+~~~cpp
+class LoggingInterface {
+public:
+    virtual ~LoggingInterface() {}
+    virtual void log(
+        const char* file,
+        int line,
+        LogLevel logLevel,
+        const char* tag,
+        const char* message) = 0;
+};
+
+void fooWrapper(LoggingInterface* logger)
+{
+	bool success = foo();
+    if (!success) {
+        logger->log(__FILE__, __LINE__, LogLevel::ERROR, "foo", "Failed to foo()");
+    }
+}
+~~~
+
+This is a fairly awful API. We can't make the `__FILE__` and `__LINE__` macros into default parameters for a function or something like that, then we will only get row where the function is declared as input. The only solution if we don't want to enter the macros every time is to make the logging function itself a macro:
+
+~~~cpp
+#define SFZ_LOG(logger, logLevel, tag, message) \
+    (logger)->log(__FILE__, __LINE__, (logLevel), (tag), (message))
+~~~
+
+### `printf()` syntax through macro
+
+In all the previous examples we have just sent a string with a message to log. But in practice we often want to print the state of variables as well. Personally I'm rather fond of `printf()`[^2], it's standard so people know how it works, it is fast, it compiles fast and it does not need to allocate any temporary memory for strings and such.
+
+In order to support `printf()` syntax on our log function we need use C [varargs](http://en.cppreference.com/w/c/variadic). An example of such forwarding below:
+
+~~~cpp
+void log(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+}
+
+#define LOG_MACRO(format, ...) log(format, ##__VA_ARGS__)
+
+LOG_MACRO("Hello World!"); // Prints "Hello World!"
+LOG_MACRO("Number %i is %s", 7, "prime") // Prints "Number 7 is prime"
+~~~
+
+## Putting it all together
+
+As shown in many of the examples above, I choose to go with an inheritance based solution for the logger instance itself. The final version is:
+
+~~~cpp
+class LoggingInterface {
+public:
+    virtual ~LoggingInterface() {}
+    virtual void log(
+        const char* file,
+        int line,
+        LogLevel level,
+        const char* tag,
+        const char* format,
+        ...) = 0;
+};
+~~~
+
+Obviously, this is a horrible API to use. But as previously mentioned we need to wrap it in macros anyway, so we can make it nicer.
+
+### Global logger
+
+The first concession that I made was to make a global logger instance. Passing around a logger instance everywhere is unfortunately a bit too painful. The solution I used is something like follows[^3]:
+
+~~~cpp
+// Header file: Context.hpp
+LoggingInterface* getLogger();
+bool setLogger(LoggingInterface* logger);
+
+// Source file: Context.cpp
+static LoggingInterface* globalLogger = nullptr;
+
+LoggingInterface* getLogger()
+{
+    return globalLogger;
+}
+
+bool setLogger(LoggingInterface* logger)
+{
+	if (globalLogger != nullptr) return false;
+    globalLogger = logger;
+    return true;
+}
+~~~
+
+Essentially, the program need to implement the LoggingInterface and provide a global logger at the very start of the program. If this is not done the program will safely segfault the moment someone tries to log something. This API also allows for easy dynamic library (i.e. `.dll`) support. You just have to send over the pointer to the logger and set it in the dynamic library when initializing it.
+
+The final logging function then looks like this:
+
+~~~cpp
+#define SFZ_LOG(logLevel, tag, format, ...) sfz::getLogger()->log( \
+	__FILE__, __LINE__, (logLevel), (tag), (format), ##__VA_ARGS__)
+
+SFZ_LOG(LogLevel::INFO, "Example", "Look, a number: %i", 3);
+~~~
+
+At this point the API is a lot nicer than it previously was, but we can still do better.
+
+### Helper macros
+
+In order to further reduce the number of parameters the user has to provide, we can create a macro for each severity level. I.e. the user can call `SFZ_WARNING("ExampleTag", "A message")` when they want to use `LogLevel::WARNING`. These helper macros are defined as follows:
+
+~~~cpp
+#define SFZ_INFO_NOISY(tag, format, ...) \
+    SFZ_LOG(sfz::LogLevel::INFO_NOISY, (tag), (format), ##__VA_ARGS__)
+
+#define SFZ_INFO(tag, format, ...) \
+    SFZ_LOG(sfz::LogLevel::INFO, (tag), (format), ##__VA_ARGS__)
+
+#define SFZ_WARNING(tag, format, ...) \
+    SFZ_LOG(sfz::LogLevel::WARNING, (tag), (format), ##__VA_ARGS__)
+
+#define SFZ_ERROR(tag, format, ...) \
+    SFZ_LOG(sfz::LogLevel::ERROR, (tag), (format), ##__VA_ARGS__)
+~~~
+
+At this point I believe we have reached quite a nice API for logging. It's not perfect, it is not really possible to have different loggers for different parts of the program. But I think that's an okay tradeoff to have for the simplicity of using the current API.
+
+## How to format the messages?
+
+The last part of this story is then how we format the messages with all the information we get. The easiest way would of course be to just print it all using `printf()`, and that's fine honestly. The whole point is that you can easily change how the log messages are formatted and where they are shown by just implementing a new logger and setting it in the beginning of the program. It would for example be very trivial to create a logger that throws away all messages that are below warning level, or any user set level really.
+
+Part 2 will cover how I implement the logger itself and hook it up in [Phantasy Engine](https://github.com/PhantasyEngine).
+
+Think my solution is stupid? Have I missed something vital? Please place a comment or send a [tweet](https://twitter.com/PetorSFZ) and tell me! :)
+
+## Footnotes
+
+[^1]: This includes setting up a CMake + Git structure for handling dependencies and independent projects, dynamically loading code at runtime (DLLs), compiling C++ into javascript using [emscripten](https://github.com/kripken/emscripten), etc.
+[^2]: If you don't like `printf()` style syntax there are other options, such as [fmt](https://github.com/fmtlib/fmt). Beware however that since fmt uses a lot of templates to accomplish basically the same functionality as `printf()`, it will take quite a bit longer to compile. If you are a fan of modern C++ you might be thinking of using `std::string` instead of `const char*`, that is also a bit risky as you will easily end up with a bunch of temporary memory allocations each time you log. Not particularly good if you are making a game or a real-time application.
+[^3]: Actually, I use a global [context](https://github.com/PetorSFZ/sfzCore/blob/master/include/sfz/Context.hpp) for my whole base library [sfzCore](https://github.com/PetorSFZ/sfzCore/). All global state of the library is stored in this context, among this state is the logger instance.
+
