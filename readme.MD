@@ -12,11 +12,6 @@ The website is powered by [Jekyll](jekyllrb.com/).
 
 ### macOS
 
-1, `gem install jekyll bundler`
-
-2, Had to install nokogiri with `sudo gem install nokogiri -n /Library/Ruby/Gems/2.3.0/gems/ -- --use-system-libraries --with-xml2-include=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libxml2`
-
-3, Inside this directory: `bundle install`, `bundle update`
-
-4, Run using `bundle exec jekyll serve`
-
+1. [Install Jekyll](https://desiredpersona.com/install-jekyll-on-macos/)
+2. Inside this directory: `bundle install`, `bundle update`
+3. Run using `bundle exec jekyll serve`
