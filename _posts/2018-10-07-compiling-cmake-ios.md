@@ -13,7 +13,7 @@ Recently I got the dumb idea to start deploying my work-in-progress game engine 
 
 First of you are going to need a paid Apple developer account (99$ a year). Apple allows self-signing applications using a "personal" account, I could not however get this working with the CMake toolchains. I assume it is possible, but after many hours of attempts I kinda gave up on that idea. With a paid account it works, at least for me.
 
-Once you have your developer account, the first thing you need to find is your `Team ID`. At the time of writing it can be found under `Membership` on [developer.apple.com/account/](developer.apple.com/account/). The `Team ID` is a short string made up of seemingly random characters and numbers, e.g.: `2R23RTVQ3Y` (made up example).
+Once you have your developer account, the first thing you need to find is your `Team ID`. At the time of writing it can be found under `Membership` on [developer.apple.com/account/](https://developer.apple.com/account/). The `Team ID` is a short string made up of seemingly random characters and numbers, e.g.: `2R23RTVQ3Y` (made up example).
 
 Next you are going to need to create an `App ID`, this can be done under `Certificates, Identifiers & Profiles`. There seem to be a couple of different options here, but what has so far worked for me is to create one with my domain and a wildcard in it. I.e. `com.skipifzero.*`
 
@@ -158,6 +158,3 @@ Unless you are developing a cross-platform project targetting many platforms, do
 We have somehow accomplished to get SDL2 + Vulkan + C++ running on iOS using a CMake based build system. I am convinced some of the solutions I have choosen are stupid. However, with the lack of good documentation/tutorials for how these kind of things should be done, I think this is a fairly good start.
 
 To be completely honest, I'm somewhat baffled by this whole affair. Getting everything described in this post working has taken more than 15 hours of work time. I don't feel like anything I have done here should be particularly unusual, but it has been very hard to find good information on how to accomplish it. I'm hoping this post can be of use to someone who are stuck in a similar position.
-
-
-
