@@ -103,6 +103,11 @@ endif()
 
 I'm sure this makes sense if you are an experienced iOS developer. But for me this left me scratching my head a bit. Whatever, it works.
 
+### Update
+
+So I turns out I was a bit too quick to celebrate. When creating a window with `SDL_WINDOW_VULKAN` the library exits with a message that SDL was built without Vulkan support. After a couple of more hours of hacking around I came up with a workaround, [my post at the SDL discourse](https://discourse.libsdl.org/t/problems-building-with-vulkan-support-for-ios/25148).
+
+
 ## Vulkan
 
 Apple has choosen to not support Vulkan officially, instead focusing on Metal. Luckily, there is a Vulkan implementation on top of Metal called [MoltenVK](https://github.com/KhronosGroup/MoltenVK). Therefore, in order to use Vulkan on iOS we need to link with MoltenVK.
