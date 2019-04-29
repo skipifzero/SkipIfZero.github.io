@@ -1,0 +1,194 @@
+---
+layout: post
+title: "Single-chunk game state (with ECS)"
+categories: development
+comments: true
+---
+
+# Single-chunk game state (with ECS)
+
+Today I'm going to be talking about something I have been developing for [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine) (my game engine) lately, a single-chunk game state!
+
+## Game state
+
+First up, what do I mean when I say game state? For my use case I have defined a game state to be all state related to the game logic and current simulation, but not the resources (textures, meshes, etc) or levels. The game state is what changes from frame to frame in a game.
+
+The game state includes everything that is needed to serialize the current state of the game to disk. In other words, if you write the entire game state to disk you have a save state. The state does not contain the level and resources, but it must contain some sort of information about which level and resources are currently in use.
+
+I have split the game state into two types of data, singletons and components (and entities). Singletons are essentially data there is only one of at any given time in the game. As an example, in the game I'm currently developing I have the following singleton in the state:
+
+```cpp
+struct CameraState {
+	vec3 pos;
+  vec3 dir;
+  float verticalFov;
+};
+```
+
+The above singleton simply describes the current location and direction of the camera used to render the game. There is only one such struct because I never render more than one frame per frame (well, until I decide to add VR support that is).
+
+For stuff that there is more than one of I use an Entity-Component-System (ECS). The components (and entities) are part of the game state, but the systems are not.
+
+## Entity Component System (ECS)
+
+There are many different versions of ECS systems out there. I'm not going going to explain all approaches and variants but instead focus on what I have done. I define the different parts as follows:
+
+* __Entity__: Two numbers, an ID (24 bits) and a generation (8 bits). Stored in a single `uint32_t`.
+* __Component__: A [POD](https://en.wikipedia.org/wiki/Passive_data_structure) `struct` which does not contain any pointers. An entity can have any number of different types of components associated with it.
+* __System__: A stateless set of functions that operate on entities and components. If a system need state it should either be stored as singletons or components in the game state.
+
+As a very simple example, you might have a system with only two types of components: `position` and `velocity`. An entity can have none, one or both of these components. A system could, as an example, be a function that operates on all entities that have a given set of components. E.g., a movement system that updates positions might operate on all entities that have both the `position` and the `velocity` component.
+
+In Phantasy Engine I currently don't specify what a system should look like, that is up to the specific game to decide. I do however specify that components, and whatever data is needed to keep track of which entities exist and such, is part of the game state.
+
+### Entity generations
+
+The second number, the generation, of an entity is used to avoid a certain class of bugs. Let's imagine we had a system where we only used a single number (which I'm going to refer to as ID from now on) stored in a `uint32_t` to define an entity. 32 bits can store $$ 2^{32} = 4\ 294\ 967\ 296 $$ entities. Neat! We will likely (unless we have a very specific edge case) never need to store that many entities. However, it is not at all unlikely that we will delete and create a lot of entities during the lifetime of the game. If we are limiting ourself to 32 bits we must assume that specific IDs (such as 3, 52, 300 295) will be reused for different entities.
+
+Reusing the same ID causes a problem though. Imagine that you have a component that refers to another entity for some reason. A very simple example could be some kind of enemy component that stores an entity for whatever it is currently targeting:
+
+```cpp
+struct EnemyComponent {
+	uint32_t targetEntity;
+};
+```
+
+If we delete the entity (and thus its components) the enemy component will still keep its target ID, it has no idea that the entity has been deleted. It is essentially a [dangling pointer](https://en.wikipedia.org/wiki/Dangling_pointer) entity. This does not need to always be a problem, the system which operates on enemy components will probably check if the `targetEntity` has the necessary components before applying logic. However, if we are unlucky a new entity which reuses the same ID might have been created. And this new entity might have the necessary components. Poof! The enemy just switched target for a very hard to debug reason!
+
+Having a generation associated with each entity, or rather its ID, solves this problem. An entity is now stored as:
+
+```cpp
+struct Entity {
+  uint32_t rawBits;
+  uint32_t id() const { return /* bitwise logic to retrieve 24-bit id */; }
+  uint8_t generation() const { return /* bitwise logic to retrieve 8-bit id */; }
+};
+```
+
+As a result the `EnemyComponent` would look as follows:
+
+```cpp
+struct EnemyComponent {
+	Entity targetEntity; // Contains id and generation
+};
+```
+
+
+The game state contains an internal array of generations (1 byte per possible entity ID). Whenever an entity is deleted this internal generation is incremented. This means that it is possible to lookup if an entity has been deleted and its ID reused or not by comparing the generation in it with the one stored in the game state. Technically this is a probabilistic approach as the generation will reset after $$ 2^8 = 256 $$ reuses, but this is extremely unlikely (to the point of being essentially impossible for a lot of games) in practice.
+
+### Naive layout (sparse)
+
+The ECS system in the game state uses the naivest possible representation. There is an array (of size `MAX_NUM_ENTITIES`) of each component type, an entity's id is an index into this array. Each entity has a bitmask (`uint64_t`, i.e. max 64 different component types) which specifies which components it has. Done.
+
+Example code:
+
+```cpp
+struct PositionComponent {
+	vec3 position;
+};
+
+struct VelocityComponent {
+	vec3 velocity;
+};
+
+// The ECS state
+uint64_t masks[MAX_NUM_ENTITIES];
+uint8_t generations[MAX_NUM_ENTITIES];
+PositionComponent positions[MAX_NUM_ENTITIES];
+VelocityComponent velocities[MAX_NUM_ENTITIES];
+
+// ...
+
+// Accessing a specific entity's velocity
+Entity someEntity;
+VelocityComponent someEntityVelocity = velocities[someEntity.id()];
+
+// Iterating over all entities with both position and velocity components
+for (uint32_t entityId = 0; entityId < MAX_NUM_ENTITIES; entityId++) {
+	uint64_t entityMask = masks[entityId];
+  if (/* check entityMask to see if entity has both position and velocity components */) {
+		PositionComponent posComp = positions[entityId];
+    VelocityComponent velComp = velocities[entityId];
+    // ...
+  }
+}
+```
+
+This is called the naive approach for a reason. It is very simple, but it has a number of cons. Some sort of summary:
+
+__Pros__:
+
+* Extremely simple
+* Great [Big O](https://en.wikipedia.org/wiki/Big_O_notation) complexity for all operations
+* Easy to reason about
+
+__Cons__:
+
+* Uses more memory than it needs to (e.g. we might have a component type which we can only have 10 of at any given time, but we still allocate `MAX_NUM_ENTITIES` instances of it)
+* Not at all guaranteed to be cache efficient, there can be "holes" in the component arrays. Should still be a slightly better chance at good cache accesses than with random `new`:ed objects in memory though.
+
+Overall it should be obvious that this layout was chosen because of its simplicity. [KISS](https://en.wikipedia.org/wiki/KISS_principle) (Keep It Simple Stupid) is a very good principle to live by. Do not add complexity until it becomes necessary. The good thing is that is possible to extend the game state to have different memory layouts for different types of components. If I feel the need I will add the choice for a smarter layout for components of the user's choice.
+
+### Smarter layout (compact)
+
+So, what would a smarter layout look like? I imagine the obvious choice would be to decouple the entity id from the index into a component array. For a given component type we could store two arrays:
+
+```cpp
+uint32_t currentNumPositionComponents; // Current number of components in the arrays below
+PositionComponent posComp[MAX_NUM_ENTITIES]; // The components
+Entity posCompEntites[MAX_NUM_ENTITIES]; // Which entity each component is associated with
+```
+
+This way all `PositionComponent`'s are perfectly cache-aligned in memory, great! And we don't need to iterate over `MAX_NUM_ENTITIES` each time either, only up to `currentNumPositionComponents`. Great!
+
+However, this approach gets decidedly more complex the more you think about it. For example, lets say you have a system which needs to iterate over all entities that have 5 different components. If you do the above naively that easily becomes really expensive and complicated, because you have to do a `O(n)` search through the list of entity ids to find where a specific entity stored its component.
+
+How do you fix that? One solution could be that you keep the component list sorted with respect to the associated entity IDs. That way a lookup for a single entity would become `O(log n)`. When iterating over all entities with a number of different components some smart scheme could be devised to only check each entity id for each component type once.
+
+So now we have sort of solved the problem with iteration, but we have introduced a lot more complexity and other problems. Deleting an entity (and its component) now becomes a `O(n)` operation as we have to keep the components sorted (and therefore move a lot of them when removing a component). Adding a component to an entity also becomes a `O(n)` operation because of the sorting. To fix this we could e.g. create some scheme where we create a list of entities to delete and then delete a bunch of them at once in a single `O(n)` operation, but that is complexity in itself… 
+
+I think I'm gonna stop there, and I haven't even started talking about how you would parallelize the above in a reasonable way. The point is that a smarter layout is definitely possible and something I'm considering adding in the future if I see the need. But right now I don't think the added complexity is worth it, [Keep It Simple Stupid](https://en.wikipedia.org/wiki/KISS_principle)!
+
+## Single-chunk allocation
+
+So I have talked a lot about game states, ECS systems and such. But what is this single-chunk allocation thing about? Essentially everything I have described previously in this post, the singletons, the ECS system, the whole game state, is stored in a single chunk of memory.
+
+Yup, that's right. The user specifies ahead of time what the game state should contain. Which singletons, which component types, the maximum number of entities, etc. Then the amount of memory to keep all of this is calculated, and then it is all allocated with a single `malloc()`.
+
+### Why though
+
+There are many different reasons I can think of why this would be desirable. So I'm gonna list some of them here:
+
+* Very easy to see how much memory the state of the game needs
+* Very easy and quick to (deep) copy the entire game state
+
+  * Just a single [`memcpy()`](https://en.cppreference.com/w/cpp/string/byte/memcpy)!
+* Very easy to write the entire game state to disk
+
+  * Just a single [`fwrite()`](https://en.cppreference.com/w/c/io/fwrite)!
+
+The above is possible for three reasons:
+
+1. Everything is allocated as a single chunk of memory
+2. All components and singletons are required to be [POD](https://en.wikipedia.org/wiki/Passive_data_structure)
+3. The components and singletons are not allowed to hold pointers, i.e. the entire game state is relocatable (somewhat similar to [position-independent code](https://en.wikipedia.org/wiki/Position-independent_code)).
+
+As an example of something you could do with this, imagine that you wanted to implement time-rewinding in your game. To do this you would need to undo the changes made to your game state and restore it to how it was earlier. Well, with [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine)'s single-chunk game state this is extremely simple! Each frame make a copy of the entire game state (very quick and easy operation, just [`memcpy()`](https://en.cppreference.com/w/cpp/string/byte/memcpy)). Then you store a number of these copies as history. To rewind just replace your current state with an older one. Done.
+
+### Details pls
+
+At this point I realize this blog post has become way longer than I initially anticipated. If there is interest I will make a follow up post with juicy implementation specific details, tricks and problems encountered.
+
+But as some sort of quick summary, having your entire game state in a single allocation is not that hard as long as you:
+
+* Can specify up front all singletons and component types you need
+* Have a set maximum number of entities (i.e., all arrays are fixed size)
+* Don't rely on pointers, abstract classes, polymorphism, etc as part of your game state
+
+It really only becomes a game of calculating memory offsets, making sure everything is aligned properly and then creating some good abstractions for the end-user (probably you) so you don't have to think about the offsets and such when using the game state.
+
+## Future
+
+As previously mentioned I might make a follow-up post on the implementation specific details. There is a lot of interesting `C/C++` that I don't see very often involved. If you want to take a look today the code is available in [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine), specifically [here (headers)](https://github.com/PetorSFZ/PhantasyEngine/tree/master/engine/include/ph/state) and [here (.cpp files)](https://github.com/PetorSFZ/PhantasyEngine/tree/master/engine/src/ph/state)
+
+The implementation also turned out to be very standalone. Next to no dependencies on stuff other than the (`C`, not `C++` thank god) standard library. I am considering factoring it out and creating a stand-alone library out of it. If you want this to happen please let me know, there is not much point for me to do so otherwise.
