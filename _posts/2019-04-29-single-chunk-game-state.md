@@ -19,7 +19,7 @@ I have split the game state into two types of data, singletons and components (a
 
 ```cpp
 struct CameraState {
-	vec3 pos;
+  vec3 pos;
   vec3 dir;
   float verticalFov;
 };
@@ -192,3 +192,5 @@ It really only becomes a game of calculating memory offsets, making sure everyth
 As previously mentioned I might make a follow-up post on the implementation specific details. There is a lot of interesting `C/C++` that I don't see very often involved. If you want to take a look today the code is available in [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine), specifically [here (headers)](https://github.com/PetorSFZ/PhantasyEngine/tree/master/engine/include/ph/state) and [here (.cpp files)](https://github.com/PetorSFZ/PhantasyEngine/tree/master/engine/src/ph/state)
 
 The implementation also turned out to be very standalone. Next to no dependencies on stuff other than the (`C`, not `C++` thank god) standard library. I am considering factoring it out and creating a stand-alone library out of it. If you want this to happen please let me know, there is not much point for me to do so otherwise.
+
+If you want updates whenever I make new posts, consider following me on [Twitter](https://twitter.com/PetorSFZ).
