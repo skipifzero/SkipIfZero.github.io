@@ -31,7 +31,7 @@ For stuff that there is more than one of I use an Entity-Component-System (ECS).
 
 ## Entity Component System (ECS)
 
-There are many different versions of ECS systems out there. I'm not going going to explain all approaches and variants but instead focus on what I have done. I define the different parts as follows:
+There are many different versions of ECS systems out there. I'm not going to explain all approaches and variants but instead focus on what I have done. I define the different parts as follows:
 
 * __Entity__: Two numbers, an ID (24 bits) and a generation (8 bits). Stored in a single `uint32_t`.
 * __Component__: A [POD](https://en.wikipedia.org/wiki/Passive_data_structure) `struct` which does not contain any pointers. An entity can have any number of different types of components associated with it.
@@ -43,7 +43,7 @@ In Phantasy Engine I currently don't specify what a system should look like, tha
 
 ### Entity generations
 
-The second number, the generation, of an entity is used to avoid a certain class of bugs. Let's imagine we had a system where we only used a single number (which I'm going to refer to as ID from now on) stored in a `uint32_t` to define an entity. 32 bits can store $$ 2^{32} = 4\ 294\ 967\ 296 $$ entities. Neat! We will likely (unless we have a very specific edge case) never need to store that many entities. However, it is not at all unlikely that we will delete and create a lot of entities during the lifetime of the game. If we are limiting ourself to 32 bits we must assume that specific IDs (such as 3, 52, 300 295) will be reused for different entities.
+The second number, the generation, of an entity is used to avoid a certain class of bugs. Let's imagine we had a system where we only used a single number (which I'm going to refer to as ID from now on) stored in a `uint32_t` to define an entity. 32 bits can store $$ 2^{32} = 4\ 294\ 967\ 296 $$ entities. Neat! We will likely (unless we have a very specific edge case) never need to store that many entities. However, it is not at all unlikely that we will delete and create a lot of entities during the lifetime of the game. If we are limiting ourselves to 32 bits we must assume that specific IDs (such as 3, 52, 300 295) will be reused for different entities.
 
 Reusing the same ID causes a problem though. Imagine that you have a component that refers to another entity for some reason. A very simple example could be some kind of enemy component that stores an entity for whatever it is currently targeting:
 
@@ -141,7 +141,7 @@ Entity posCompEntites[MAX_NUM_ENTITIES]; // Which entity each component is assoc
 
 This way all `PositionComponent`'s are perfectly cache-aligned in memory, great! And we don't need to iterate over `MAX_NUM_ENTITIES` each time either, only up to `currentNumPositionComponents`. Great!
 
-However, this approach gets decidedly more complex the more you think about it. For example, lets say you have a system which needs to iterate over all entities that have 5 different components. If you do the above naively that easily becomes really expensive and complicated, because you have to do a `O(n)` search through the list of entity ids to find where a specific entity stored its component.
+However, this approach gets decidedly more complex the more you think about it. For example, let's say you have a system which needs to iterate over all entities that have 5 different components. If you do the above naively that easily becomes really expensive and complicated, because you have to do a `O(n)` search through the list of entity ids to find where a specific entity stored its component.
 
 How do you fix that? One solution could be that you keep the component list sorted with respect to the associated entity IDs. That way a lookup for a single entity would become `O(log n)`. When iterating over all entities with a number of different components some smart scheme could be devised to only check each entity id for each component type once.
 
