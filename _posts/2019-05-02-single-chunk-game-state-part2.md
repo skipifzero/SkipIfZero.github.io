@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Single-chunk game state - The juicy implementation details
+title: "Single-chunk game state - Part 2 - The implementation details"
 categories: development
 comments: true
 ---
