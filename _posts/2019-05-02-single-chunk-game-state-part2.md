@@ -11,7 +11,7 @@ This is the follow-up post to [my previous one](http://www.skipifzero.com/develo
 
 To be frank, I'm not completely happy with how that post turned out. I had really planned to fill it with the content that is now in this post. But it got too long, so I felt like I had to cut it down somehow. Which meant basically cutting out the technical details, which was probably the most interesting part of the whole thing. Oops.
 
-Anyway, having read the previous post will probably make it easier to understand this one. This will still be a very technical post, a least basic knowledge of `C` and `C++` is recommended. Let's dig in!
+Anyway, having read the previous post will probably make it easier to understand this one. This will still be a very technical post, at least basic knowledge of `C` and `C++` is recommended. Let's dig in!
 
 ## Some context
 
@@ -27,7 +27,7 @@ Before we start I'm quickly going to cover some related technical topics. Some a
 
 3. Because of how `C++` compilation works, the template [definition](https://en.cppreference.com/w/cpp/language/definition) usually need to be in a header file (`.h`) instead of a compilation unit (`.cpp`). This means that the template need to be compiled for each compilation unit (`.cpp`) it is used in, multiplying the cost of compilation.
 
-4. They are hard to debug. The errors generated can be ridiculusly hard to read and understand.
+4. They are hard to debug. The errors generated can be ridiculously hard to read and understand.
 
 5. They have a tendency to spread and infect the rest of your codebase. If you have a templated type which you want to operate on with a function, you usually have to make that function a template itself so you can operate on all variants of that type. Etc.
 
@@ -72,7 +72,7 @@ As a simple example, on some CPU architectures a 32-bit integer (such as `uint32
 
 Normally no types have a higher alignment requirement than 4-bytes. However, SIMD types usually require 16-byte or even 32-byte alignment for optimal use. The alignment of a specific type can be checked with the [`alignof()`](https://en.cppreference.com/w/c/language/_Alignof) operator, which works similarly to [`sizeof()`](https://en.cppreference.com/w/cpp/language/sizeof).
 
-The main takeaway for now is that you can't just place arbitrary structs at arbitrary locations in memory, they have to be aligned to memory addresses that fullfil the type's requirements.
+The main takeaway for now is that you can't just place arbitrary structs at arbitrary locations in memory, they have to be aligned to memory addresses that fulfil the type's requirements.
 
 ### POD types
 
@@ -220,7 +220,7 @@ struct ArrayHeader {
 };
 ```
 
-Here we utilize the size of the each component as a sort of ad-hoc type-safety. Which is neat!
+Here we utilize the size of each component as a sort of ad-hoc type-safety. Which is neat!
 
 Another problem with the ArrayHeader is that it really isn't a normal struct. All its methods operate on data that lies outside the struct, but which you don't have an explicit pointer to. The following is a simple error a user could do:
 
@@ -363,7 +363,7 @@ And this is pretty much it. We have some nice helper methods in the `GameStateHe
 
 ## Conclusion
 
-Overall I am pretty happy with how Phantasy Engine's game state has turned out. It has been a bit of a rocky road, if you look up the git history there is an embarassing amount of stupid errors made along the way. But the end result is really neat, having everything in a single chunk of memory has already turned out useful for serialization/deserialization purposes. And I can already imagine other cool applications for it.
+Overall I am pretty happy with how Phantasy Engine's game state has turned out. It has been a bit of a rocky road, if you look up the git history there is an embarrassing amount of stupid errors made along the way. But the end result is really neat, having everything in a single chunk of memory has already turned out useful for serialization/deserialization purposes. And I can already imagine other cool applications for it.
 
 Unlike the last post I think I covered most of the technical details I wanted to cover, but as tradeoff I think it got way too long. Oh well, it's hard to be brief when trying to explain technical details. Hopefully you, the reader, has gotten something out of it. Maybe learned some new C++ trick, or maybe realized something you had never thought about. I know at least I did a couple of times when I implemented this myself.
 
