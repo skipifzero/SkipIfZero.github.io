@@ -1,19 +1,59 @@
----
-layout: post
-title: "Volumetric lighting 2"
-categories: graphics
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# Volumetric lighting 2 - Intersection test
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Volumetric lighting 2 - 2016-02-02</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-01-31-volumetric-lighting-1.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-02-03-volumetric-lighting-3.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Volumetric lighting 2
+	</div>
+	<div id="page-middle-post-subtitle">
+		Intersection test
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2016-02-02
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 My last post discussed the naive implementation of volumetric lighting. One of the problems we identified was that we wasted precious samples by sampling outside the spotlight cone, which we will now rectify. We will accomplish this by performing a ray vs cone intersection test to figure out where the cone starts and where it ends along ray. Then we can simply sample between these two points instead of all the way from the camera to the object.
 
 The [Real-Time Rendering website has a list of intersection tests](http://www.realtimerendering.com/intersections.html). Unfortunately I was not really happy with the ray vs cone tests (many branches, small stuff I was too stupid to see the point of, etc.). This combined with the fact that I can be irritatingly stubborn about understanding what I’m doing and general [NIH:ism](https://en.wikipedia.org/wiki/Not_invented_here) quickly led me to the decision to do the math myself and make my own test.
 
-## The math
+# The math
 
-![ray vs cone](/assets/posts/2016-02-02-volumetric-lighting-2/ray_vs_cone.jpg)
+![](/res/posts/2016-02-02-volumetric-lighting-2/ray_vs_cone.jpg)
 
 The image above shows a mathematical representation of a cone and a line. The cone is defined by:
 
@@ -43,7 +83,7 @@ $$ \text{dot}(D_{cone}, ~ X(t) - P_{\text{cone}}) = \text{length}(X(t) - P_{\tex
 
 So this is the equation we need to expand and simplify in-order to implement the intersection test. If you look at the second version of the equation we have a **length()** operation, which contains a square root operation. We need to square both sides to remove this square root. This has the consequence that the equation will start allowing false solutions from a mirrored cone in the opposite direction.
 
-![mirrored cone](/assets/posts/2016-02-02-volumetric-lighting-2/mirrored_cone.jpg)
+![](/res/posts/2016-02-02-volumetric-lighting-2/mirrored_cone.jpg)
 
 This is not really a huge problem for now, but we will have to handle it later on. But without further ado, here is the expanded version:
 
@@ -61,11 +101,11 @@ $$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}, ~\text{if} ~ b^2 - 4ac \geq 0 $$
 
 And with this we have everything we need for a line vs infinite mirrored cone intersection test.  This is a good start, but it is obviously not enough for our purposes.
 
-## Ray vs spotlight test
+# Ray vs spotlight test
 
 So what we actually want is ray vs spotlight intersection test. We have the math for finding intersections on the cone part, but our spotlights have a limited range. We could imagine that the actual shape of our spotlight is a cone bound by a sphere.
 
-![surface of interest](/assets/posts/2016-02-02-volumetric-lighting-2/surface_of_interest.jpg)
+![](/res/posts/2016-02-02-volumetric-lighting-2/surface_of_interest.jpg)
 
 So it is not enough to check for intersections against the cone, we also need to check against the bounding sphere. Luckily an intersection test against a sphere is way easier to create than against a cone, so if you are interested in the details I recommend [checking the Real-Time Rendering website.](http://www.realtimerendering.com/intersections.html)
 
@@ -79,12 +119,12 @@ So what we are going to do is manually check each **t** and see if they are on t
 
 In the third case we can just return the two values. In the second case we need to return the start position of the ray as the first intersection.
 
-## Implementation
+# Implementation
 
 The following code snippet is the complete implementation of the ray vs spotlight intersection test (minus the line vs sphere test). Specific details will be explained in comments.
 
 ~~~glsl
-// Result of an intersection test. t1 and t2 is the amount needed to move in ray direction. 
+// Result of an intersection test. t1 and t2 is the amount needed to move in ray direction.
 // If hit is false t1 and t2 can contain anything, otherwise t1 <= t2.
 struct Intersection {
 	bool hit;
@@ -198,7 +238,7 @@ Intersection rayVsSpotlight(vec3 rayPos, vec3 rayDir,
 Puh, that's a lot of code! Hopefully it is somewhat clear what we are doing.
 
 
-## No sampling
+# No sampling
 
 Before we start improving our naive shader it might be interesting to try out an approach where we only use the intersection test and ignore the shadow map. This will of course not give us any shadows (the light will shine through any and all objects), but it will hopefully be substantially cheaper to compute. If it looks good enough it could be included in a potential product as a setting for weaker hardware.
 
@@ -222,18 +262,18 @@ for (int i = 0; i < 16; ++i) {
 }
 ~~~
 
-![naive marching vs no sampling](/assets/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_no_sampling.png)
+![](/res/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_no_sampling.png)
 
 
-## Marching with intersection test
+# Marching with intersection test
 
 It is finally time to combine the full marching with the intersection test. The code will be practically identical to the no sampling variant, except we also sample the shadow map and the number of samples depend on the user setting.
 
-![naive marching vs test + marching](/assets/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_test_plus_marching.png)
+![](/res/posts/2016-02-02-volumetric-lighting-2/naive_marching_vs_test_plus_marching.png)
 
 As can be seen in the comparison a lot of the banding artifacts just disappear and the result looks much better in general. This is because we don't waste any samples outside the spotlight and instead have more of them in the region where they actually matter.
 
-## Performance
+# Performance
 
 So, how is the performance of our new shaders? Is the intersection test prohibitively expensive to compute? Let us look at some numbers.
 
@@ -252,9 +292,9 @@ So, how is the performance of our new shaders? Is the intersection test prohibit
 **Test - No sampling**    | **#** | 1.6 | 0.1 | 2.3  | **#** | 8.1  | 5.4 | 34.5 | **#** | 26.2  | 2.5
 **Test - Naive marching** | **#** | 2.5 | 0.6 | 11.2 | **#** | 10.3 | 5.2 | 21.2 | **#** | 44.2  | 11.6
 
-![perf graph 2560x1440](/assets/posts/2016-02-02-volumetric-lighting-2/perf_graph_1440.png)
+![](/res/posts/2016-02-02-volumetric-lighting-2/perf_graph_1440.png)
 
-![perf graph 1280x720](/assets/posts/2016-02-02-volumetric-lighting-2/perf_graph_720.png)
+![](/res/posts/2016-02-02-volumetric-lighting-2/perf_graph_720.png)
 
 So this is interesting, it seems that this new approach is in general as fast or faster than the naive marching! It is not very surprising since we should be able to do a bit more early rejection if we know a ray will not hit a spotlight. But it is still nice to have improved the quality and the performance at the same time. As for the no sampling variant it is actually quite fast. Given a bit of implementation optimization it should be very feasible to have it as an option for low performing hardware.
 
@@ -263,3 +303,36 @@ So, one could say that we have accomplished what we set out to do. We have signi
 No.
 
 Next post will focus on optimization and making this thing run faster.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-01-31-volumetric-lighting-1.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-02-03-volumetric-lighting-3.html">Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

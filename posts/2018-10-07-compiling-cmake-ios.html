@@ -1,15 +1,52 @@
----
-layout: post
-title: "Compiling C++ + SDL2 + Vulkan application for iOS using CMake"
-categories: development
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# Compiling C++ + SDL2 + Vulkan application for iOS using CMake
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Compiling C++ + SDL2 + Vulkan application for iOS using CMake - 2018-10-07</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2018-04-03-cpp-logging-2.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2019-04-29-single-chunk-game-state.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Compiling C++ + SDL2 + Vulkan application for iOS using CMake
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2018-10-07
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 Recently I got the dumb idea to start deploying my work-in-progress game engine for iOS devices. I had in my naivety assumed that this would be an easy process, I was wrong. This post details how I managed to build applications written in C++, using SDL2 and Vulkan (MoltenVK), with CMake for iOS.
 
-## Developer account necessary
+# Developer account necessary
 
 First of you are going to need a paid Apple developer account (99$ a year). Apple allows self-signing applications using a "personal" account, I could not however get this working with the CMake toolchains. I assume it is possible, but after many hours of attempts I kinda gave up on that idea. With a paid account it works, at least for me.
 
@@ -17,9 +54,9 @@ Once you have your developer account, the first thing you need to find is your `
 
 Next you are going to need to create an `App ID`, this can be done under `Certificates, Identifiers & Profiles`. There seem to be a couple of different options here, but what has so far worked for me is to create one with my domain and a wildcard in it. I.e. `com.skipifzero.*`
 
-![](/assets/posts/2018-10-07-compiling-cmake-ios/app_id.png)
+![](/res/posts/2018-10-07-compiling-cmake-ios/app_id.png)
 
-## Polly toolchain
+# Polly toolchain
 
 CMake does not yet have native iOS support, so we need a toolchain file. It seemed like the [Polly](https://github.com/ruslo/polly) toolchain is among the most well-supported ones, so that is what I choose to use.
 
@@ -39,7 +76,7 @@ export POLLY_IOS_BUNDLE_IDENTIFIER="com.yourdomain.*"
 
 `POLLY_IOS_BUNDLE_IDENTIFIER` is the `App ID` you created.
 
-## Build something!
+# Build something!
 
 At this point it's a good idea to try out if we can build and deploy a simple `C++` hello world program.
 
@@ -76,7 +113,7 @@ cmake .. -GXcode -DCMAKE_TOOLCHAIN_FILE=$POLLY_ROOT/ios.cmake
 
 Hopefully everything should build and sign correctly at this point, at least it did for me.
 
-## SDL2
+# SDL2
 
 Annoyingly `SDL2` does not ship pre-built binaries for iOS, so we have to build them ourselves.
 
@@ -103,12 +140,12 @@ endif()
 
 I'm sure this makes sense if you are an experienced iOS developer. But for me this left me scratching my head a bit. Whatever, it works.
 
-### Update
+## Update
 
 So I turns out I was a bit too quick to celebrate. When creating a window with `SDL_WINDOW_VULKAN` the library exits with a message that SDL was built without Vulkan support. After a couple of more hours of hacking around I came up with a workaround, [my post at the SDL discourse](https://discourse.libsdl.org/t/problems-building-with-vulkan-support-for-ios/25148).
 
 
-## Vulkan
+# Vulkan
 
 Apple has choosen to not support Vulkan officially, instead focusing on Metal. Luckily, there is a Vulkan implementation on top of Metal called [MoltenVK](https://github.com/KhronosGroup/MoltenVK). Therefore, in order to use Vulkan on iOS we need to link with MoltenVK.
 
@@ -140,7 +177,7 @@ find_library(MoltenVK_LIB
     ${MoltenVK_Path}/MoltenVK/iOS)
 ```
 
-## File access
+# File access
 
 One of the first things that tripped me up once I got everything compiling and running correctly was files. You are not allowed to read and write files however you want in an iOS application. It was also not obvious to me how to bundle files with the application onto the iOS device itself.
 
@@ -156,10 +193,43 @@ add_custom_command(TARGET helloworld POST_BUILD
 
 The above copies the directory `res` in the root of my project (next to the `CMakeLists.txt`) into the iOS application bundle. The path to application bundle where this res directory resides can easily be queried using `SDL_GetBasePath()` if necessary.
 
-## Conclusion
+# Conclusion
 
 Unless you are developing a cross-platform project targetting many platforms, don't bother. I haven't tried it, but I get the feeling going for a pure Xcode based setup would be way easier. With that said, I think this turned out quite well.
 
 We have somehow accomplished to get SDL2 + Vulkan + C++ running on iOS using a CMake based build system. I am convinced some of the solutions I have choosen are stupid. However, with the lack of good documentation/tutorials for how these kind of things should be done, I think this is a fairly good start.
 
 To be completely honest, I'm somewhat baffled by this whole affair. Getting everything described in this post working has taken more than 15 hours of work time. I don't feel like anything I have done here should be particularly unusual, but it has been very hard to find good information on how to accomplish it. I'm hoping this post can be of use to someone who are stuck in a similar position.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2018-04-03-cpp-logging-2.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2019-04-29-single-chunk-game-state.html">Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

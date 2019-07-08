@@ -1,24 +1,70 @@
----
-layout: default
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-<h1>About</h1>
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | About</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
 
-<P> My name is Peter Hillerström, and this is my personal site slash blog. I'm a professional software engineer with an MSc in Computer Science from Chalmers University of Technology. My main technical interests are computer graphics, GPU programming, low-level optimization and games. </P>
+<!-- Body -->
+<body>
 
-<P> Outside of programming I'm a lover of fiction, movies, books, games, you name it. I especially love science fiction, both good and bad. </P>
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
 
-<h2>My code</h2>
-<P> A lot of my code is available at my <a href="https://github.com/PetorSFZ">github page</a> and at <a href="https://github.com/SkipIfZero">the github page of SkipIfZero</a>. For games I've finished take a look <a href="/games.html">here</a>. </P>
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
 
-<h2>SkipIfZero</h2>
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		About
+	</div>
+</div>
 
-<P> SkipIfZero was the name of my 'company' I created when I started making games back in the swedish equivalent of high school. I was naiver back then and had fantasies about starting an independent game studio. That didn't really pan out (at least not yet), but the name still stuck. Nowadays I often shorten it to SFZ. </P>
+<!-- Markdown begin -->
+<markdeep>
 
-<h2>Hiring</h2>
 
-<P> I am currently employed as a consultant and not looking for new work. However, as a consultant I always keep my eyes open for new interesting assignments. If you have an interesting project you think I would be a good fit for, please feel free to contact me! </P>
+My name is Peter Hillerström, and this is my personal site slash blog. I'm a professional software engineer with an MSc in Computer Science from Chalmers University of Technology. My main technical interests are computer graphics, GPU programming, low-level optimization and games.
 
-<h2>Contact</h2>
+Outside of programming I'm a lover of fiction, movies, books, games, you name it. I especially love science fiction, both good and bad.
 
-<P>Feel free to contact me at <a href="mailto:petor@hstroem.se">petor@hstroem.se</a>. Or perhaps just send me a <a href="https://twitter.com/PetorSFZ">tweet</a>.</P>
+# My code
+
+A lot of my code is available at my github page and at the github page of SkipIfZero. For games I've finished take a look here.
+SkipIfZero
+
+SkipIfZero was the name of my 'company' I created when I started making games back in the swedish equivalent of high school. I was naiver back then and had fantasies about starting an independent game studio. That didn't really pan out (at least not yet), but the name still stuck. Nowadays I often shorten it to SFZ.
+
+# Contact
+
+Feel free to contact me at petor@hstroem.se. Or perhaps just send me a tweet.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

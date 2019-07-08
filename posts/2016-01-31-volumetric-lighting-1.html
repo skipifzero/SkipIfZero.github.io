@@ -1,22 +1,62 @@
----
-layout: post
-title: "Volumetric lighting 1"
-categories: graphics
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# Volumetric lighting 1 - A naive approach
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Volumetric lighting 1 - 2016-01-31</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-01-26-blog-launch.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-02-02-volumetric-lighting-2.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Volumetric lighting 1
+	</div>
+	<div id="page-middle-post-subtitle">
+		A naive approach
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2016-01-31
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 About a year ago I experimented with implementing volumetric lighting[^volumetric_lighting] using ray marching[^ray_marching]. I had gotten the basic idea from a lecture and liked the simplicity of the algorithm. My implementation back then was not particularly clever though, and since then I have kept getting interesting ideas on how to improve upon it. This series of post will explore the basic algorithm and various improvements I have made to it.
 
-![volumetric lighting example](/assets/posts/2016-01-31-volumetric-lighting-1/volumetric_lighting_example.png)
+![](/res/posts/2016-01-31-volumetric-lighting-1/volumetric_lighting_example.png)
 
 
-## Basic algorithm
+# Basic algorithm
 
 To reiterate, I'm going to focus on a ray-marching based algorithm for approximating volumetric lighting. While there also exist (likely faster) methods for approximating it in [screen space](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch13.html), this approach should be a bit more accurate. It also has the benefit of allowing for textured lights[^textured_light]. Most importantly I think it is neat because it is a very intuitive algorithm.
 
-![basic algorithm](/assets/posts/2016-01-31-volumetric-lighting-1/basic_algo.jpg)
+![](/res/posts/2016-01-31-volumetric-lighting-1/basic_algo.jpg)
 
 So, how does it work? Essentially it is an extension of the normal shadow mapping algorithm. Instead of only sampling[^shadow_map_sampling] the shadow map at the position of the object we also sample it a number of times in the area between the camera and the object. This is illustrated in the image above. If we take the average of all these samples we get a value in the range [0, 1] for how much of the air between the camera and object is in light. Some pseudocode below:
 
@@ -29,11 +69,11 @@ So, how does it work? Essentially it is an extension of the normal shadow mappin
 	sum /= number of samples
 
 
-## Weight problems
+# Weight problems
 
 My description of the basic algorithm above sounds simple enough and it was more or less what my old implementation was doing. In many cases it also looks perfectly fine, but if we take a step back and think about it it stops making sense. If we just average all the samples we assume that each sample contributes the same amount to the final image, i.e. a sample 1000 meters away is as important as a sample 1 meter away. It gets even worse when we consider the fact that the range we are looking at changes depending on how far the away the object on the screen is.
 
-![wrong result](/assets/posts/2016-01-31-volumetric-lighting-1/wrong_result.jpg)
+![](/res/posts/2016-01-31-volumetric-lighting-1/wrong_result.jpg)
 
 In the image above we consider two pixels, A and B. Pixel A should probably be brighter than B as it has more light on it (from two light sources). In the current model pixel B will actually be brighter than A as a larger percentage of the distance between the camera and the object is in light. In order to do this properly we clearly need a model to apply different weights to the samples somehow, which is the first improvement of my new implementation. I decided on a linear model with the following properties:
 
@@ -46,16 +86,16 @@ $$ m = \frac{2}{d_\max}, ~ k = \frac{-2}{(d_\max)^2} $$
 
 This is not very intuitive to understand, so take a look at this graph instead:
 
-![weight graph](/assets/posts/2016-01-31-volumetric-lighting-1/weight_graph.jpg)
+![](/res/posts/2016-01-31-volumetric-lighting-1/weight_graph.jpg)
 
 The weight for a given sample is the area under the graph for the distance the sample covers. The total area for all samples (given that we only sample from 0 to d<sub>max</sub>) is 1. The weight decreases the further away from the camera a sample is, and after d<sub>max</sub> the light contributes nothing to the final image at all. In practice I'm going to approximate the weights somewhat:
 
-![weighted graph approximation](/assets/posts/2016-01-31-volumetric-lighting-1/weight_graph_approx.jpg)
+![](/res/posts/2016-01-31-volumetric-lighting-1/weight_graph_approx.jpg)
 
 In the above example the weight for the first sample s<sub>1</sub> is going to be the range covered (d<sub>max</sub> / 4) times f(s<sub>1</sub>).
 
 
-## Light model
+# Light model
 
 For this series of posts I'm going to limit myself to spotlights, mainly because that's what I primarily use (for now). But most (if not all) of the optimizations and improvements should be easily transferable to omni-directional point lights as well.
 
@@ -75,7 +115,7 @@ struct Spotlight {
 };
 ~~~
 
-## Naive implementation
+# Naive implementation
 
 ~~~glsl
 // User defined parameters
@@ -117,11 +157,11 @@ void main()
 
 As you can see some details have been removed for brevity, but the intent should be clear. I introduced two additional user defined parameters, one for setting the number of samples per pixel and one for scaling the result. The latter is needed in order to fine tune the results for a given scene. Below is an image of the result:
 
-![naive result](/assets/posts/2016-01-31-volumetric-lighting-1/naive_result.png)
+![](/res/posts/2016-01-31-volumetric-lighting-1/naive_result.png)
 
 We have some noticeable banding artifacts on the volumetric light. The reason for this is that most of the samples actually miss the spotlight itself in this particular image. We could fix this by increasing the number of samples per pixel (currently at 128), or perhaps by doing something smarter...
 
-## Performance
+# Performance
 
 I'm going to test on 3 different configurations, a desktop with Nvidia GTX 980Ti, a laptop with Nvidia GTX 970M and the same laptop with Intel HD Graphics 4600. The rendering resolution is always 2560x1440, but the volumetric lighting is going to be rendered both at full resolution (2560x1440) and at quarter resolution (1280x720). Number of samples per pixel is 128 unless otherwise noted. The resolution of the shadow map (for the volumetric lighting, not the standard shading) is 256x256, which I have found to give quite nice results will still being relatively cheap to sample from multiple times.
 
@@ -139,13 +179,13 @@ Listed below is the result of the naive implementation. All times are in millise
 **Baseline**       | **#** | 1.5 | 0.1 | 1.9 | **#**| 7.9  | 5.4 | 20.4 | **#** | 24.5 | 2.4
 **Naive Marching** | **#** | 2.6 | 0.6 | 4.3 | **#**| 10.5 | 5.1 | 41.2 | **#** | 43.7 | 9.8
 
-![performance graph 2560x1440](/assets/posts/2016-01-31-volumetric-lighting-1/perf_graph_2560x1440.png)
+![](/res/posts/2016-01-31-volumetric-lighting-1/perf_graph_2560x1440.png)
 
-![performance graph 1280x720](/assets/posts/2016-01-31-volumetric-lighting-1/perf_graph_1280x720.png)
+![](/res/posts/2016-01-31-volumetric-lighting-1/perf_graph_1280x720.png)
 
 From this it should be quite clear that the effect is quite expensive, even when rendered in a lower resolution. And if we look at the maximum frametimes during the run the result is even worse. So the question is, can we do better? If we think about it for a bit, we will realize we are doing something very wasteful. We know that all the samples outside the spotlight cone will be in shadow and not contribute to the final image, so any samples taken there will be totally wasted. Wouldn’t it be better if we only sampled inside the spotlight cone where we don’t know the values? Stay tuned for part 2 in which we will resolve this issue.
 
-## Footnotes
+# Footnotes
 
 [^volumetric_lighting]: [Volumetric lighting](https://en.wikipedia.org/wiki/Volumetric_lighting) (also commonly known under the names god rays, light shafts, air shafts, etc) is a term used for the phenomena where you can see a shaft of light in the air. An example would be light streaming into a dusty room through a window.
 
@@ -154,3 +194,36 @@ From this it should be quite clear that the effect is quite expensive, even when
 [^textured_light]: With textured light I mean using a texture to decide the color and intensity for each "ray" of the light source. For example a projector projecting an image onto a wall could be accomplished using a spotlight with the image projected as the texture.
 
 [^shadow_map_sampling]: Whenever I talk about sampling the shadow map I actually mean getting the depth value, comparing it and getting a value between 0 and 1 back.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-01-26-blog-launch.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-02-02-volumetric-lighting-2.html">Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

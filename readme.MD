@@ -8,10 +8,4 @@ Any changes made to the master branch will immediately show up on the website. F
 
 ## Running locally
 
-The website is powered by [Jekyll](jekyllrb.com/).
-
-### macOS
-
-1. [Install Jekyll](https://desiredpersona.com/install-jekyll-on-macos/)
-2. Inside this directory: `bundle install`, `bundle update`
-3. Run using `bundle exec jekyll serve`
+The website is powered by [Markdeep](https://casual-effects.com/markdeep/), just launch a python http-server or something and start browsing.

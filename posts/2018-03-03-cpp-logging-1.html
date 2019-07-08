@@ -1,13 +1,53 @@
----
-layout: post
-title: "C++ Logging (Part 1)"
-categories: development
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# C++ Logging (Part 1)
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | C++ Logging (Part 1) - 2018-03-03</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
 
-Hi again everyone! It has been quite some time huh? Since last summer I've been working on and off on a game engine I'm calling [Phantasy Engine](https://github.com/PhantasyEngine). It's still in the early stages, but there have been some interesting problems I've had to solve. This post is not about the more advanced and interesting problems[^1], it is about logging!
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2017-08-08-the-orange-cube.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2018-04-03-cpp-logging-2.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		C++ Logging
+	</div>
+	<div id="page-middle-post-subtitle">
+		Part 1
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2018-03-03
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
+
+Hi again everyone! It has been quite some time huh? Since last summer I've been working on and off on a game engine I'm calling [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine). It's still in the early stages, but there have been some interesting problems I've had to solve. This post is not about the more advanced and interesting problems[^1], it is about logging!
 
 So by logging I simply mean the common act of printing out messages to the user, or more often the developer, of the program. A simple example using the C standard library:
 
@@ -21,9 +61,9 @@ if (!success) {
 
 The above is quite simple and works fine most of the time, but there are a number of features one might want when the size of the codebase increases. This post will detail some features one might want and how I have attempted to solve them.
 
-## Features
+# Features
 
-### Redirecting output
+## Redirecting output
 
 One of the most obvious features one might want is the ability to redirect output somewhere else than the terminal. For example you might want to write to a file instead so you can look at the log after the program has run. Perhaps you might even want to print the text to some in-engine info window.
 
@@ -59,7 +99,7 @@ void fooWrapper(LoggingInterface* logger)
 
 This way of passing around the logger instance is also fairly attractive because it avoids global state. It also becomes possible to have different loggers for different part of the codebase. The drawback is that you have to send around loggers everywhere.
 
-### Tags
+## Tags
 
 When logging many different things at the same time it can be useful to be able to filter messages depending on what type they are. This approach is utilized by [Android](https://developer.android.com/reference/android/util/Log.html)'s logging interface among others. To expand the previous example:
 
@@ -79,7 +119,7 @@ void fooWrapper(LoggingInterface* logger)
 }
 ~~~
 
-### Severity levels
+## Severity levels
 
 Another way of sorting among different messages is to split them into severity levels. A message could be an error message, but it could also be pure information, used only to figure out what the program has been doing.
 
@@ -95,7 +135,7 @@ enum class LogLevel : uint32_t {
 
 ~~~
 
-### Macro `__FILE__` and`__LINE__` 
+## Macro `__FILE__` and`__LINE__`
 
 In C and C++ there are two very useful preprocessor macros for debugging and logging purposes, `__FILE__` and `__LINE__`. The first one returns a string (`const char*`) containing the filename of the file, the second one returns the line number of the file. Example:
 
@@ -136,7 +176,7 @@ This is a fairly awful API. We can't make the `__FILE__` and `__LINE__` macros i
     (logger)->log(__FILE__, __LINE__, (logLevel), (tag), (message))
 ~~~
 
-### `printf()` syntax through macro
+## `printf()` syntax through macro
 
 In all the previous examples we have just sent a string with a message to log. But in practice we often want to print the state of variables as well. Personally I'm rather fond of `printf()`[^2], it's standard so people know how it works, it is fast, it compiles fast and it does not need to allocate any temporary memory for strings and such.
 
@@ -157,7 +197,7 @@ LOG_MACRO("Hello World!"); // Prints "Hello World!"
 LOG_MACRO("Number %i is %s", 7, "prime") // Prints "Number 7 is prime"
 ~~~
 
-## Putting it all together
+# Putting it all together
 
 As shown in many of the examples above, I choose to go with an inheritance based solution for the logger instance itself. The final version is:
 
@@ -177,7 +217,7 @@ public:
 
 Obviously, this is a horrible API to use. But as previously mentioned we need to wrap it in macros anyway, so we can make it nicer.
 
-### Global logger
+## Global logger
 
 The first concession that I made was to make a global logger instance. Passing around a logger instance everywhere is unfortunately a bit too painful. The solution I used is something like follows[^3]:
 
@@ -215,7 +255,7 @@ SFZ_LOG(LogLevel::INFO, "Example", "Look, a number: %i", 3);
 
 At this point the API is a lot nicer than it previously was, but we can still do better.
 
-### Helper macros
+## Helper macros
 
 In order to further reduce the number of parameters the user has to provide, we can create a macro for each severity level. I.e. the user can call `SFZ_WARNING("ExampleTag", "A message")` when they want to use `LogLevel::WARNING`. These helper macros are defined as follows:
 
@@ -235,17 +275,49 @@ In order to further reduce the number of parameters the user has to provide, we 
 
 At this point I believe we have reached quite a nice API for logging. It's not perfect, it is not really possible to have different loggers for different parts of the program. But I think that's an okay tradeoff to have for the simplicity of using the current API.
 
-## How to format the messages?
+# How to format the messages?
 
 The last part of this story is then how we format the messages with all the information we get. The easiest way would of course be to just print it all using `printf()`, and that's fine honestly. The whole point is that you can easily change how the log messages are formatted and where they are shown by just implementing a new logger and setting it in the beginning of the program. It would for example be very trivial to create a logger that throws away all messages that are below warning level, or any user set level really.
 
-Part 2 will cover how I implement the logger itself and hook it up in [Phantasy Engine](https://github.com/PhantasyEngine).
+Part 2 will cover how I implement the logger itself and hook it up in [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine).
 
 Think my solution is stupid? Have I missed something vital? Please place a comment or send a [tweet](https://twitter.com/PetorSFZ) and tell me! :)
 
-## Footnotes
+# Footnotes
 
 [^1]: This includes setting up a CMake + Git structure for handling dependencies and independent projects, dynamically loading code at runtime (DLLs), compiling C++ into javascript using [emscripten](https://github.com/kripken/emscripten), etc.
 [^2]: If you don't like `printf()` style syntax there are other options, such as [fmt](https://github.com/fmtlib/fmt). Beware however that since fmt uses a lot of templates to accomplish basically the same functionality as `printf()`, it will take quite a bit longer to compile. If you are a fan of modern C++ you might be thinking of using `std::string` instead of `const char*`, that is also a bit risky as you will easily end up with a bunch of temporary memory allocations each time you log. Not particularly good if you are making a game or a real-time application.
 [^3]: Actually, I use a global [context](https://github.com/PetorSFZ/sfzCore/blob/master/include/sfz/Context.hpp) for my whole base library [sfzCore](https://github.com/PetorSFZ/sfzCore/). All global state of the library is stored in this context, among this state is the logger instance.
 
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2017-08-08-the-orange-cube.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2018-04-03-cpp-logging-2.html>Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

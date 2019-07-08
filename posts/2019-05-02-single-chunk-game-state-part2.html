@@ -1,11 +1,51 @@
----
-layout: post
-title: "Single-chunk game state - Part 2 - The implementation details"
-categories: development
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# Single-chunk game state - Part 2 - The implementation details
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Single-chunk game state (Part 2) - 2019-05-02</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-04-29-single-chunk-game-state.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2019-05-06-may-2019-update.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Single-chunk game state
+	</div>
+	<div id="page-middle-post-subtitle">
+		Part 2 - The implementation details
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2019-05-02
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 This is the follow-up post to [my previous one](http://www.skipifzero.com/development/2018/10/07/compiling-cmake-ios.html), in which I discussed [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine)'s game state in very general terms.
 
@@ -13,11 +53,11 @@ To be frank, I'm not completely happy with how that post turned out. I had reall
 
 Anyway, having read the previous post will probably make it easier to understand this one. This will still be a very technical post, at least basic knowledge of `C` and `C++` is recommended. Let's dig in!
 
-## Some context
+# Some context
 
 Before we start I'm quickly going to cover some related technical topics. Some are just why we use or don't use certain `C++` language features, other are more advanced topics which you might not normally come across even if you regularly program in `C++`.
 
-### `C++` templates (and how we use them)
+## `C++` templates (and how we use them)
 
 [`C++` templates](https://en.cppreference.com/w/cpp/language/templates) is `C++`'s metaprogramming feature. It essentially allows the programmer to write generic code that can then be compiled into specific code for specific parameters. `C++` templates are generally terrible in many aspects. A short list:
 
@@ -57,14 +97,14 @@ struct NonTemplatedStruct {
   template<typename T>
   void templatedMethod(T a, T b)
   {
-    // ...    
+    // ...
   }
 };
 ```
 
 The reason for this is that, in my experience, templated types is what mostly causes the templates to spread all over your codebase. Templated functions and methods don't really do that the same way. It is also slightly more limited what you can (easily) do with templated functions, so they tend to stay (at least a bit) simpler.
 
-### Memory alignment
+## Memory alignment
 
 Unless you have done any low-level programming, such as [SIMD](https://en.wikipedia.org/wiki/SIMD) programming, this is probably not something you have any experience with. Memory alignment means what memory (pointer) addresses a type is allowed to be located at.
 
@@ -74,7 +114,7 @@ Normally no types have a higher alignment requirement than 4-bytes. However, SIM
 
 The main takeaway for now is that you can't just place arbitrary structs at arbitrary locations in memory, they have to be aligned to memory addresses that fulfil the type's requirements.
 
-### POD types
+## POD types
 
 A [POD (Plain Old Data)](https://en.wikipedia.org/wiki/Passive_data_structure) type is a type which:
 
@@ -118,7 +158,7 @@ static_assert(std::is_trivially_destructible<T>::value, "Check if no destructor"
 
 This, of course, means that we skip initializing the struct's members with the specified default values inside the game state. That sucks a bit, but it is fine honestly. This way we can at least rely on the default values when creating structs outside the game state.
 
-### Relocability
+## Relocability
 
 Relocability is the ability to copy stuff around in memory and have them work, regardless of which memory address they are on. POD types mostly fulfill this already, with one caveat, pointers. Below is a small example where it breaks;
 
@@ -143,35 +183,35 @@ The above example should be quite clear. Pointers get invalidated when stuff mov
 
 What can you do instead? Use offsets. An offset, often expressed in bytes, is a relative distance from some known pointer. The `this` pointer is very useful for this purpose.
 
-### Strict aliasing
+## Strict aliasing
 
 In `C++` it is actually [undefined behavior to access memory of one type as another type by reinterpret casting a pointer](https://en.cppreference.com/w/cpp/language/reinterpret_cast#Type_aliasing). This is of course stupid and makes it very hard to do any cool stuff. The Visual Studio compiler does not utilize strict-aliasing for anything, but if you are building with GCC or Clang you should pass the `-fno-strict-aliasing` flag to disable these optimizations.
 
 If you intend to use techniques I describe in this post it is not really a suggestion, it is a requirement. A lot of the stuff I do is not allowed under the strict-aliasing rules.
 
-## ArrayHeader
+# ArrayHeader
 
 We are finally done with the background, let us start talking about the game state itself. As mentioned in the previous post, there are quite a lot of arrays stored in the game state. One array for each component type, one array for the generations, one for the component masks, etc. This section describes `ArrayHeader`, which is used to keep track of the arrays in the game state.
 
-### Memory layout
+## Memory layout
 
 In standard C++ there are two common ways of storing arrays, a plain `C`-array (alternatively [`std::array<T,N>`](https://en.cppreference.com/w/cpp/container/array)) or [`std::vector<T>`](https://en.cppreference.com/w/cpp/container/vector) (alternatively its [cooler replacement](https://github.com/PetorSFZ/sfzCore/blob/master/lib-core/include/sfz/containers/DynArray.hpp) in [sfzCore](https://github.com/PetorSFZ/sfzCore)). The memory layout of a `C`-array is as follows:
 
-![](/assets/posts/2019-05-02-single-chunk-game-state-part2/array_memory_layout.png)
+![](/res/posts/2019-05-02-single-chunk-game-state-part2/array_memory_layout.png)
 
 The array is placed directly in contiguous memory on the stack. You then pass around pointers to this piece of memory when using the array in different places. A `std::vector<T>` on the other hand have the following memory layout:
 
-![](/assets/posts/2019-05-02-single-chunk-game-state-part2/dyn_array_memory_layout.png)
+![](/res/posts/2019-05-02-single-chunk-game-state-part2/dyn_array_memory_layout.png)
 
 The above layout is obviously not what we want since we only want a single chunk of memory. `std::vector<T>` does have a number of advantages over a `C`-vector though. Specifically that it keeps track of the current size and capacity, which makes it possible to have the convenience methods [`push_back()`](https://en.cppreference.com/w/cpp/container/vector/push_back) (or `add()` as I call it) and [`pop_back()`](https://en.cppreference.com/w/cpp/container/vector/pop_back). Also range-checking if you are into that sort of thing I guess...
 
 What we want is a third option which is (as far as I know) not available in the standard library. This is what I call `ArrayHeader`, and the memory layout looks like this:
 
-![](/assets/posts/2019-05-02-single-chunk-game-state-part2/array_header_memory_layout.png)
+![](/res/posts/2019-05-02-single-chunk-game-state-part2/array_header_memory_layout.png)
 
 Essentially it is a fixed size `C`-array, but it has a header on top which keeps track of the current size and capacity. The `ArrayHeader` struct also has methods for manipulating the array, so we get (most) of the convenience with `std::vector<T>` in a more useful format!
 
-### ArrayHeader implementation
+## ArrayHeader implementation
 
 The ArrayHeader is not your ordinary `C++` class. It has a number of tricks and unusual behaviors which are not that common in code you usually see. A simplified (and templated) implementation could look as follows:
 
@@ -181,14 +221,14 @@ struct ArrayHeader {
   uint32_t size;
   uint32_t capacity;
   uint8_t ___padding___[24];
-  
+
   T* arrayPtr()
   {
     uint32_t offsetInBytes = sizeof(ArrayHeader);
     uint8_t* rawArrayPtr = reinterpret_cast<uint8_t*>(this) + offsetInBytes;
     return reinterpret_cast<T*>(rawArrayPtr);
   }
-  
+
   T* elementAt(uint32_t idx) {
     if (idx >= size) return nullptr;
     return arrayPtr() + idx;
@@ -210,7 +250,7 @@ struct ArrayHeader {
   uint32_t capacity;
   uint32_t elementSizeBytes;
   uint8_t ___padding___[20];
-  
+
   template<typename T>
   T* arrayPtr()
   {
@@ -245,7 +285,7 @@ By disabling the copy constructors the previously shown error can no longer occu
 
 And that's basically all I'm going to say about the ArrayHeader for now. If you want to see more details checkout the source in [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine).
 
-## GameStateHeader
+# GameStateHeader
 
 Now that we have the basic building block in the form of `ArrayHeader` we can design our single-chunk game state. We use a similar pattern to `ArrayHeader` where we have a header which operates on memory adjacent to it.
 
@@ -261,30 +301,30 @@ struct GameState {
   // offsets to all "members in GameState" except for specific singletons
   // and component arrays, which need to be looked up in the registries.
   GameStateHeader header;
-  
+
   // Registry with information about offsets to and size of each singleton
   ArrayHeader singletonRegistryHeader;
   SingletonRegistryEntry singletonRegistryEntries[NUM_SINGLETONS];
-  
+
   // Singletons are placed here
   Singleton0 singleton0;
   Singleton1 singleton1;
   // ...
   SingletonN singletonN;
-  
+
   // Registry with information about offsets to the ArrayHeader for each
   // component type
   ArrayHeader componentRegistryHeader;
   ComponentRegistryEntry componentRegistryEntries[NUM_COMPONENT_TYPES];
-  
+
   // Array with all components masks for all possible entities
   ArrayHeader componentMasksHeader;
   uint64_t componentMasks[MAX_NUM_ENTITITES];
-  
+
   // Array with all generations for all possible entities
   ArrayHeader generationsHeader;
   uint8_t generations[MAX_NUM_ENTITIES];
-  
+
   // All components
   ArrayHeader componentType0Header;
   Component0 component0s[MAX_NUM_ENTITIES];
@@ -323,7 +363,7 @@ struct GameStateHeader {
   // The number of component types in the ECS system. This includes data-less flags, such as the
   // first (0th) ComponentMask bit which is reserved for whether an entity is active or not.
   uint32_t numComponentTypes;
-  
+
   // The maximum number of entities allowed in the ECS system.
   uint32_t maxNumEntities;
 
@@ -361,7 +401,7 @@ Mostly this is fairly unsurprising, just a lot of offsets as expected. But there
 
 And this is pretty much it. We have some nice helper methods in the `GameStateHeader` to make it easier to access everything in it, but it is not too complicated if you understand how the `ArrayHeader` works. Look up the [source](https://github.com/PetorSFZ/PhantasyEngine/tree/master/engine/include/ph/state) if you are interested in more details.
 
-## Conclusion
+# Conclusion
 
 Overall I am pretty happy with how Phantasy Engine's game state has turned out. It has been a bit of a rocky road, if you look up the git history there is an embarrassing amount of stupid errors made along the way. But the end result is really neat, having everything in a single chunk of memory has already turned out useful for serialization/deserialization purposes. And I can already imagine other cool applications for it.
 
@@ -369,3 +409,35 @@ Unlike the last post I think I covered most of the technical details I wanted to
 
 That is everything for me. Don't forget to [follow me on twitter](https://twitter.com/petorsfz) for more updates!
 
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-04-29-single-chunk-game-state.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2019-05-06-may-2019-update.html">Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

@@ -1,55 +1,100 @@
----
-layout: default
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-<h1>Games</h1>
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Games</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
 
-<P> This is a list of most finished or near finished games I've been involved with. </P>
+<!-- Body -->
+<body>
 
-<h2>Released</h2>
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
 
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
 
-<h3><a href="https://github.com/SkipIfZero/snakium-cubed">snakium³</a></h3>
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Games
+	</div>
+</div>
 
-<img src="/assets/games/snakium-cubed/img1.png" style="width:100%;">
-
-<P>A 3d snake game, which was under development on and off for a pretty long period of time. I think the end result turned out quite nice, so download it and give it a go! Read more in the <a href="/games/2016/05/07/snakium-cubed-release.html">release post</a> or on the <a href="https://github.com/SkipIfZero/snakium-cubed">Github page</a>.
-
-<P><a href="https://github.com/SkipIfZero/snakium-cubed/releases">Download for free here!</a></P>
-
-
-<h3><a href="https://legendofcube.github.io/">Legend of Cube</a></h3>
-
-<img src="/assets/games/legendofcube/img2.jpg" style="width:49.0%;">
-<img src="/assets/games/legendofcube/img1.png" style="width:49.0%;">
-
-<P> A 3d platformer made in a team as part of my bachelor's thesis. I was mainly responsible for writing the physics engine and implementing gameplay mechanics (such as jumping). To be completely honest I don't really have a lot to say about this game. A couple of fundamental mistakes were made and a few more months of development is needed to to turn it into a good product. As it stands it is a proof of concept to borrow elements from when making a new game. </P>
-
-<P><a href="https://legendofcube.github.io/">Available here.</a></P>
-
-
-<h2>Old android projects</h2>
-
-<P> These are some of the first games I made. Android was the target platform in the naive hope that I could make money selling them (note: you really can't). Instead I decided to release them for free, check them out if you are interested. </P>
+<!-- Markdown begin -->
+<markdeep>
 
 
-<h3><a href="https://play.google.com/store/apps/details?id=com.skipifzero.snakium">snakium</a></h3>
+This is a list of most finished or near finished games I've been involved with.
 
-<img src="/assets/games/snakium/snakium_screen1.png" style="width:49%;">
-<img src="/assets/games/snakium/snakium_screen2.png" style="width:49%;">
+# Released
 
-<P> A nice snake clone featuring multiple game modes and very customizable rules. Made in the summer of 2013 after my first year at Chalmers. Unlike previous projects I decided to focus on something smaller in scope and instead try to do it really, really well. The focus of snakium was to make it look really good and give it a distinct style and theme. Lessons were learned from previous projects and much effort went into making the quick, tight controls of snake work on a touch device. </P>
+## [snakium³](https://github.com/SkipIfZero/snakium-cubed)
 
-<P><a href="https://play.google.com/store/apps/details?id=com.skipifzero.snakium">It's available for free on Google Play Store, so grab it now!</a> <a href="https://github.com/SkipIfZero/snakium">The source is also available on Github.</a></P>
+![](/res/games/snakium-cubed/img1.png)
 
-<P>Features music and sound effects by <a href="http://coffer.se">Coffer</a>.</P>
+A 3d snake game, which was under development on and off for a pretty long period of time. I think the end result turned out quite nice, so download it and give it a go! Read more in the [release post](/games/2016/05/07/snakium-cubed-release.html) or on the [Github page](https://github.com/SkipIfZero/snakium-cubed).
+
+[Download for free here!](https://github.com/SkipIfZero/snakium-cubed/releases)
+
+## [Legend of Cube](https://legendofcube.github.io/)
+
+![](/res/games/legendofcube/img2.jpg)
+![](/res/games/legendofcube/img1.png)
+
+A 3d platformer made in a team as part of my bachelor's thesis. I was mainly responsible for writing the physics engine and implementing gameplay mechanics (such as jumping). To be completely honest I don't really have a lot to say about this game. A couple of fundamental mistakes were made and a few more months of development is needed to to turn it into a good product. As it stands it is a proof of concept to borrow elements from when making a new game.
+
+[Available here.](https://legendofcube.github.io/)
+
+# Old Android projects
+
+These are some of the first games I made. Android was the target platform in the naive hope that I could make money selling them (note: you really can't). Instead I decided to release them for free, check them out if you are interested.
+
+These games used to be available on the Google Play Store, but because of neglect they got taken down when Google changed what information you are required to provide.
+
+## snakium
+
+![](/res/games/snakium/snakium_screen1.png)
+![](/res/games/snakium/snakium_screen2.png)
+
+A nice snake clone featuring multiple game modes and very customizable rules. Made in the summer of 2013 after my first year at Chalmers. Unlike previous projects I decided to focus on something smaller in scope and instead try to do it really, really well. The focus of snakium was to make it look really good and give it a distinct style and theme. Lessons were learned from previous projects and much effort went into making the quick, tight controls of snake work on a touch device.
+
+[Source code](https://github.com/SkipIfZero/snakium)
+
+Features music and sound effects by [Coffer](http://coffer.se).
+
+## Space Hunter
+
+![](/res/games/spacehunter/img1.jpg)
+![](/res/games/spacehunter/img2.jpg)
+
+Space Hunter is space shooter for Android. It was made during 2011/2012 as a school project. As it was my first 'real' programming project I didn't really have any prior experience and the process was very much trial and error. I think the end result still turned out quite nice, but the source code is a huge mess.
 
 
-<h3><a href="https://play.google.com/store/apps/details?id=com.skipifzero.android.spacehunter">Space Hunter</a></h3>
+<!-- Markdown end -->
+</markdeep>
 
-<img src="/assets/games/spacehunter/img1.jpg" style="width:49%;">
-<img src="/assets/games/spacehunter/img2.jpg" style="width:49%;">
+<!-- Content end -->
+</div></div></div>
 
-<P> Space Hunter is space shooter for Android. It was made during 2011/2012 as a school project. As it was my first 'real' programming project I didn't really have any prior experience and the process was very much trial and error. I think the end result still turned out quite nice, but the source code is a huge mess.</P>
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
 
-<P><a href="https://play.google.com/store/apps/details?id=com.skipifzero.android.spacehunter">It's available for free on Google Play Store, so go ahead and try it out!</a></P>
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

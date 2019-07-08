@@ -1,25 +1,65 @@
----
-layout: post
-title: "Volumetric lighting 3"
-categories: graphics
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
-# Volumetric lighting 3 - Optimization and result
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Volumetric lighting 3 - 2016-02-03</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-02-02-volumetric-lighting-2.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-05-07-snakium-cubed-release.html">Next ></a>
+	</div>
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Volumetric lighting 3
+	</div>
+	<div id="page-middle-post-subtitle">
+		Optimization and result
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2016-02-03
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 In the first post we created a basic volumetric lighting shader using ray marching. In the second post we improved the quality and performance by performing an intersection test against the spotlight before sampling. At this point we are pretty happy with the effect, but we want it to run way faster. Time for optimization!
 
-## Resolutions
+# Resolutions
 
 A very easy idea would be to simply lower the resolution of the effect. We can actually change the resolution of both the effect itself (number of rays) and of the shadow map. Below is a comparison image with some variations of resolutions (0.25<sup>2</sup>x means that the width and height is 0.25 times the full values):
 
-![resolution comparison](/assets/posts/2016-02-03-volumetric-lighting-3/resolution_comparison.png)
+![](/res/posts/2016-02-03-volumetric-lighting-3/resolution_comparison.png)
 
 This is very interesting. Besides some aliasing on the objects it seems we can turn the rendering resolution way down without making the result look worse. If we look back at the performance numbers in the previous posts we learn that lowering the resolution is a very significant performance boost, so this is a very good result. When rendering at 0.5<sup>2</sup> times the resolution (not shown in the comparison) I have a hard time telling the difference, so this is what I'm going to recommend as the default.
 
 When it comes to the shadow map resolution having higher than 256<sup>2</sup> actually seems to make the quality worse. This makes sense considering a single texel on the shadow map is no longer as close to being representative of the whole range covered by a sample as before (think [mipmaps](https://en.wikipedia.org/wiki/Mipmap)). Since it's cheaper to take multiple samples from a smaller shadow map there really is no reason to use a high resolution one for volumetric lighting.
 
-## Code optimization
+# Code optimization
 
 Right now the code for the intersection test is mostly designed for readability. But from the performance numbers we can tell that it is still fairly fast. So it is probably a better idea to spend some time on improving the marching loop. It currently looks like this:
 
@@ -132,13 +172,13 @@ This is a quite nice result. On a Nvidia 970M we have a **~22%** improvement at 
 
 No.
 
-## Better sampling
+# Better sampling
 
 Let us take a step back and consider the whole thing again. One of the original problems we had was with inefficient sampling, in particular wasted samples outside the spotlight. But are we really using our samples in the most efficient way right now? If we could decrease the number of samples we take without decreasing the quality we could probably improve performance even further.
 
 Right now we are sampling with even intervals, in each iteration we calculate the weight of that particular sample. This might be stupid. Right now we have 128 samples per ray, if we were to sample all the way from 0 to the maximum visible distance d<sub>max</sub> we can observe something interesting. The first sample would have a very huge weight, and the last one would have a very small one. So we are basically saying that the first samples we take are more important than the later ones, and the last ones might contribute next to nothing to the final image! So instead of sampling at even intervals we could try to sample so that each sample have the same weight.
 
-![equal weight sampling](/assets/posts/2016-02-03-volumetric-lighting-3/equal_weight_sampling.jpg)
+![](/res/posts/2016-02-03-volumetric-lighting-3/equal_weight_sampling.jpg)
 
 This would look something like the image above. We would have a high density of samples close to the camera and then less the further away we get. Unlike earlier each sample will contribute exactly the same amount to the final image. This also means that the amount of samples we take for a given ray will depend entirely on how close we are to the spotlight in question.
 
@@ -167,7 +207,7 @@ factor /= float(uNumSamples);
 
 No a very big change. Before we look at the performance we should take a look at the quality.
 
-![equal weight comparison](/assets/posts/2016-02-03-volumetric-lighting-3/equal_weight_comparison.png)
+![](/res/posts/2016-02-03-volumetric-lighting-3/equal_weight_comparison.png)
 
 It seems the equal weight version gives slightly worse quality in some situations, but mostly I have a hard time telling any difference. Which is a good thing. Let us look at the performance numbers again:
 
@@ -189,13 +229,13 @@ It seems the equal weight version gives slightly worse quality in some situation
 **Test - Optimized marching** | **#** | 2.2 | 0.4 | 3.3  | **#** | 9.5  | 5.3 | 41.2 | **#** | 40.5  | 9.6
 **Test - Equal weight**       | **#** | 1.9 | 0.3 | 3.2  | **#** | 8.6  | 5.2 | 20.9 | **#** | 32.8  | 6.2
 
-![perf graph 2560x1440](/assets/posts/2016-02-03-volumetric-lighting-3/perf_graph_1440.png)
+![](/res/posts/2016-02-03-volumetric-lighting-3/perf_graph_1440.png)
 
-![perf graph 1280x720](/assets/posts/2016-02-03-volumetric-lighting-3/perf_graph_720.png)
+![](/res/posts/2016-02-03-volumetric-lighting-3/perf_graph_720.png)
 
 Wow, this is a very good result. Compared to optimized marching we have (on an 970m) a **~30%** improvement at full resolution and a **~10%** improvement at a quarter resolution. Compared to where we were when we started this optimization process we have a **~58%** improvement at full resolution and a **20%** improvement at a quarter resolution. The improvement is even more impressive on the integrated intel card. At a quarter resolution we have almost reached playable speeds (30fps).
 
-## Limitations
+# Limitations
 
 So, what's the catch with the equal weight version? The problem with it is that it has uneven performance. It performs optimally when you are looking at spotlights from the side while not being too close to them. Worst case is when you are inside them looking at the light source, in that scenario the performance might be as bad as naive marching.
 
@@ -203,10 +243,43 @@ Another limitation that is slightly harder to spot has to do with the user param
 
 In conclusion things are not really as bad as I might have made it sound here. It basically means that the parameters need to be tuned for the scene. And the light placement itself might need to be done with some care to how the algorithm works, but for most scenes I suspect it will work fine. But the only way to truly know for sure is to test it out in practice. If the scene in question is problematic there are always other algorithms.
 
-## Conclusion
+# Conclusion
 
 So, are we content?
 
 For now, yes. In the end we managed to improve the quality and performance of the basic algorithm by quite a bit. I'm sure there are still many potential improvements to be made. One of the most obvious ones is to adapt it for textured lights. It would be interesting to see how expensive sampling a light texture is compared to the **smoothstep()** call each iteration.
 
 If you have any questions or comments feel free to post a comment and I will try to answer is as best as I can.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2016-02-02-volumetric-lighting-2.html">< Previous</a>
+	</div>
+	<div class="page-middle-post-navigation-next">
+		<a href="/posts/2016-05-07-snakium-cubed-release.html">Next ></a>
+	</div>
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>

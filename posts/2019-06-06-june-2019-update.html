@@ -1,12 +1,51 @@
----
-layout: post
-title: "June 2019 Update - Small steps"
-categories: development
-comments: true
----
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
 
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | June 2019 Update - Small steps - 2019-06-06</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
 
-# June 2019 Update - Small steps
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-05-06-may-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		June 2019 Update
+	</div>
+	<div id="page-middle-post-subtitle">
+		Small steps
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2019-06-06
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
 
 So it has now been a month since I started treating skipifzero like a real job. I would say it has gone well enough, but it has been a weird couple of weeks. Summer hit Sweden, the heat and longer days always makes me a bit groggy, which hasn't been the best for productivity. There has also been a lot of Swedish holidays this month, which has made it somewhat hard for me to tell whether a given day was a vacation day or skipifzero work day. I have learned from previous mistakes that you can't work all the time and must give yourself time to relax as well, otherwise you burn out.
 
@@ -14,23 +53,23 @@ There has been progress on the game, but maybe not as much as I would have liked
 
 As might have been expected, there has been a lot of sharp edges when actually trying to use Phantasy Engine. There were design decisions that made sense when designing the engine, but was hard to use in practice. Some glue needed to tie together the engine and game code was missing, etc.
 
-Overall I'm not that surprised that the startup would be slow, in fact it was exactly what I was expecting. Still, one always hopes that things will go faster and smoother than they inevitably end up doing. I did choose to use my own engine, so this project will likely always progress slower than if I used Unity or Unreal Engine. But I'm fine with that, it's what I enjoy, and I expect to get some gains out of it further down the line.  
+Overall I'm not that surprised that the startup would be slow, in fact it was exactly what I was expecting. Still, one always hopes that things will go faster and smoother than they inevitably end up doing. I did choose to use my own engine, so this project will likely always progress slower than if I used Unity or Unreal Engine. But I'm fine with that, it's what I enjoy, and I expect to get some gains out of it further down the line.
 
-## Project Apocatropics
+# Project Apocatropics
 
 Like last time, I will summarize the current state of the game with a gif:
 
-![](/assets/posts/2019-06-06-june-2019-update/progress.gif)
+![](/res/posts/2019-06-06-june-2019-update/progress.gif)
 
 Of course, it still looks very ugly. A lot has happened behind the scenes though.
 
-### Level format
+## Level format
 
 One of the main things I have spent time on is designing a level format. In theory I could define levels directly in code, and honestly it might even be fine for my purposes. However, defining levels in code makes it very hard to create visual tools to modify levels (e.g. level editors). In addition, it would make it very hard for me to outsource creation of levels to other people. For these reasons I decided to make a level format from the very beginning.
 
 One of my main requirements was that the level format was easily human readable and modifiable. I choose to use [JSON](https://en.wikipedia.org/wiki/JSON) as the base. Not because I think JSON is the best format (personally I might have preferred [TOML](https://github.com/toml-lang/toml)), but because JSON is the most common. I did not want to write my own parser (even I have limits), and there are tons of different JSON parsers available. I ended up using [sajson](https://github.com/chadaustin/sajson), which has worked out pretty well for me so far.
 
-### Physics
+## Physics
 
 Besides the level format I have looked quite a bit at physics engines this month. Phantasy Engine does not have any physics engines built-in, and it honestly might never have (because then it would no longer be lightweight). Picking and integrating a physics engine is usually something I try to avoid as long as possible, because from my experience it causes so much pain in all sorts of practical manners when you end up doing it.
 
@@ -46,7 +85,7 @@ This left me with essentially two choices. Either I could attempt to modify qu3e
 
 So the work on my own physics simulation has mostly been on collision detection and response. I have implemented OBB SAT ([Separating Axis Theroem](https://en.wikipedia.org/wiki/Hyperplane_separation_theorem)) tests before, but I have not really been entirely convinced of their correctness. This time I implemented quite a bit of unit tests, and it turns out my suspicions were correct. I have spent quite a bit of time this month struggling with making the SAT tests work correctly. I think have it mostly correct now, but my unit tests covers far from all cases.
 
-### Lore
+## Lore
 
 In order to give myself a break from the physics engine pains, I decided to start writing down lore for the world of the game. Writing lore has turned out to be a nice change of pace. I don't have to engage the logical part of my brain the same way, which is really relaxing.
 
@@ -54,7 +93,7 @@ My brain produces lore way faster than I have time to write it down, so coming u
 
 I have currently written down a few pages of lore, and the people I have shown it to have been positive so far. It seems coming up with and designing the world itself will not be a problem. The question remains how well I can actually write a story in this world.
 
-## Phantasy Engine
+# Phantasy Engine
 
 One of the main problems with Phantasy Engine itself turned out to be the resource system. The way it worked was that you registered e.g. a texture with the renderer, and you then got an index back which was used to refer to it. This turned out to be very annoying when trying to write a level format as you would rather like to refer to resources with a name (in my case, the file path).
 
@@ -65,15 +104,47 @@ The above works well under two assumptions:
 1.  You have a well defined hashing algorithm that always returns the same hash for the same string, on every run on every platform (i.e., [`std::hash<std::string>`](https://en.cppreference.com/w/cpp/string/basic_string/hash) would not do it).
 2. You don't have any collisions, all strings you use as identifiers produce unique hashes from all other strings you use.
 
-Luckily, this is something I had actually written and implemented ages ago in [sfzCore](https://github.com/PetorSFZ/sfzCore), under the name of [`StringID`](https://github.com/PetorSFZ/sfzCore/blob/master/lib-core/include/sfz/strings/StringID.hpp). I just never ended up actually using it, until now that is. It somehow ended up working perfectly almost immediately, which is not always the case when using old (practically untested) code. I'm very proud of past me. 
+Luckily, this is something I had actually written and implemented ages ago in [sfzCore](https://github.com/PetorSFZ/sfzCore), under the name of [`StringID`](https://github.com/PetorSFZ/sfzCore/blob/master/lib-core/include/sfz/strings/StringID.hpp). I just never ended up actually using it, until now that is. It somehow ended up working perfectly almost immediately, which is not always the case when using old (practically untested) code. I'm very proud of past me.
 
 So with the help of the `StringID`'s I can now track and can refer to all resources with the help of their paths (relative to the executable). For now this is working out fine, but we will see if it ends up problematic in the long run.
 
-## ZeroG
+# ZeroG
 
 No updates to ZeroG this month, focus has been on getting Project Apocatropics started. I haven't yet decided if I'm going to start integrate ZeroG into Phantasy Engine this month or not, but probably not. Frankly, it is not that important at the current state of development.
 
-## Conclusion
+# Conclusion
 
 If you made it this far, good job, and thanks for taking the time! As always, don't forget to follow me on [Twitter](https://twitter.com/PetorSFZ) if you are interested in more updates!
 
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-05-06-may-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>
