@@ -1,0 +1,127 @@
+<!-- Copyright Peter Hillerström 2019 (skipifzero) -->
+
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | July 2019 Update - Eat your dogfood - 2019-07-09</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-06-06-june-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		July 2019 Update
+	</div>
+	<div id="page-middle-post-subtitle">
+		Eat your dogfood
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2019-07-09
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
+
+Hi again everyone!
+
+Last time I talked about [eating my own dogfood](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) with regards to actually using [Phantasy Engine](https://github.com/PetorSFZ/PhantasyEngine) for the game I'm making. When I was writing that post I had gotten a lot of tough work done, and planned to spend June working on making the first prototype levels and game mechanics for the game. Well, about that.
+
+The nice thing about being your own boss is that you get to decide what to do and when to do it. The bad thing about being your own boss is that you get to decide what to do and when to do it. In the last post I wrote that it wasn't that important to integrate [ZeroG](https://github.com/PetorSFZ/ZeroG), my cross-platform graphics API, into Phantasy Engine. Literally the moment after I finished the post I got the urge to do just that, and since I'm my own boss and I don't have any self-control I started working on it. And I continued doing so for the rest of the month.
+
+In other words, this whole month has been a huge continuation on the [eat your dogfood](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) theme, just on a different level than last time. Progress on the game itself has been mostly standstill, except for planning and lore writing.
+
+# Project Apocatropics
+
+Nothing visible has happened (i.e. no code). A lot of lore writing and planning of initial scenarios has happened though.
+
+# Phantasy Engine
+
+I have started writing some initial parts of what I call the "Next Generation Renderer". The next generation renderer is essentially the integration of ZeroG into Phantasy Engine.
+
+## The old renderer
+
+The old renderer is fairly simple. The entire implementation is completely hidden behind a C-API. The user specifies what they want to render, but not how it is to be rendered. The idea was that different renderer implementations could be created, and it should be possible to swap renderer without changing any code anywhere.
+
+This was a good idea in theory, but it had a number of problems:
+
+* Most games (at least the ones I make) want at least some custom rendering features. If they are not supported by the default renderer(s) a custom one has to be made for the game. I.e., we lose the ability to swap renderer because the game needs our custom one.
+* Maintenance hell. Currently there is only one renderer (CompatibleGL, i.e. compatible OpenGL that works on everything). The reason for this is that it was very annoying to have to update several renderers each time the renderer api changed. This will only get worse with time the more APIs, variants and features are added.
+
+## Next generation renderer
+
+The next generation renderer has a different philosophy. First up, it is not modular. There is only a single implementation, one made on-top of ZeroG. This means that cross-platform API support is delegated to ZeroG, and not considered by the renderer itself.
+
+The second difference is that it is not as strictly defined what work the renderer should perform. Instead, what shaders to run and in what order is defined by a configuration (JSON) file. This way each game can make their own configuration without having to fork and write their own renderer.
+
+This renderer is in fairly early development, almost nothing is implemented yet.
+
+# ZeroG
+
+ZeroG has seen quite a bit of work this month. The last features I deemed necessary in order to start using it has been implemented. There has also been quite a number of bug fixes.
+
+Features implemented last month:
+
+* Mipmaps for 2D textures
+* Can create pipelines (shader programs) from SPIR-V binaries using [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross)
+* Implemented the C++ wrapper API
+* Added options to set the rasterizer, blend and depth settings for a pipeline
+
+I'm thinking I should probably write a longer stand-alone post about ZeroG someday. But I think I will wait a bit longer until it is in a bit more stable state. Currently it is very volatile and essentially every commit breaks compatibility.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-06-06-june-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>
