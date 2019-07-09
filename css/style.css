@@ -75,7 +75,8 @@ a:visited
 #page-top-navigation-box
 {
 	display: flex;
-	justify-content: center;
+	justify-content: space-evenly;
+	flex-wrap: wrap;
 	margin-top: 0em;
 	margin-bottom: 2em;
 }
@@ -85,9 +86,7 @@ a:visited
 	color: var(--bright-text-color);
 	font-size: 1.5em;
 	font-weight: 600;
-
-	margin-left: 1em;
-	margin-right: 2.5em;
+	margin: 0 auto;
 	text-decoration: none;
 }
 
@@ -203,6 +202,14 @@ a:visited
 }
 
 /* Markdeep overrides */
+
+.md a {
+	font-family: 'Helvetica', sans-serif;
+}
+
+.md ul {
+	line-height: 2.2em;
+}
 
 .md code
 {
