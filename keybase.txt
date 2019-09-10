@@ -1,0 +1,56 @@
+==================================================================
+https://keybase.io/petorsfz
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://skipifzero.com
+  * I am petorsfz (https://keybase.io/petorsfz) on keybase.
+  * I have a public key ASBTmAV_qcYFdJYpKwGHoVeymaGAFeBosKa2tYoK4i5_Ngo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "01205398057fa9c6057496292b0187a157b299a18015e068b0a6b6b58a0ae22e7f360a",
+      "host": "keybase.io",
+      "kid": "01205398057fa9c6057496292b0187a157b299a18015e068b0a6b6b58a0ae22e7f360a",
+      "uid": "e8270c6f48584f153853733cdad2f719",
+      "username": "petorsfz"
+    },
+    "merkle_root": {
+      "ctime": 1568141111,
+      "hash": "f3a30e8bda22c67a1ac728b2823577747e04c82c769417d273f708645dc56f6b05c1a2ac8cee6f8e3482c4ef2a7e01b7a780102e9a1063054f521786c941aec1",
+      "hash_meta": "06c170a986a02bdde6c3b571a5563bafba4ea421e309921f5d8a54534e0a9860",
+      "seqno": 6493635
+    },
+    "service": {
+      "entropy": "5dr3vuHbCBu3S3JQeBnvv1mJ",
+      "hostname": "skipifzero.com",
+      "protocol": "http:"
+    },
+    "type": "web_service_binding",
+    "version": 2
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "4.4.1"
+  },
+  "ctime": 1568141118,
+  "expire_in": 504576000,
+  "prev": "44b33cdfa7e7a0a6bd792a903dc2e30c5be12e55e2de30a2d0fbc4681e5af116",
+  "seqno": 8,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgU5gFf6nGBXSWKSsBh6FXspmhgBXgaLCmtrWKCuIufzYKp3BheWxvYWTESpcCCMQgRLM836fnoKa9eSqQPcLjDFvhLlXi3jCi0PvEaB5a8RbEIOjsrY7Ndg39dSlJk9udLaYWwfCcKotPMRYXVE/a+yKKAgHCo3NpZ8RAeJiTu2O359vc4IfOEghQeP8zkMnEp2xlXq+sxUj/2cEeOJCQx5ixerqUztINJXOfI1PMgOmK5qt7EkIKCAhxDKhzaWdfdHlwZSCkaGFzaIKkdHlwZQildmFsdWXEIC1evPCE/iym70BLfJqjlReKPxIeB7I2SciatQ0Ry6Joo3RhZ80CAqd2ZXJzaW9uAQ==
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/petorsfz
+
+==================================================================
