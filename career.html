@@ -1,0 +1,117 @@
+<!-- Copyright Peter Hillerström 2019-2022 (skipifzero) -->
+
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | Career</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		Career
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
+This page is a summary of my career so far, mainly with regards to game development and graphics programming. It mixes personal endeavours and professional jobs. If you are after a strict resume I suggest looking me up on LinkedIn.
+
+# Pre-2012
+
+* Played around with computers a whole bunch growing up.
+* Learned programming in Java and Python.
+* Made my first game (_Space Hunter_) in Java for Android, using OpenGL ES 1.0.
+	* (Was available on Google Play Store, but haven't kept up with changing rules so they unfortunately took it down.)
+
+# 2012-2017 - Chalmers University era
+
+* Learned C __and__ C++ (they are different languages!)
+* Learned modern OpenGL (3+)
+* Learned CUDA
+* Learned ~some~ Vulkan
+* Took "Computer Graphics" and "Advanced Computer Graphics" courses.
+* Was a supervisor in "Computer Graphics" for 2 years.
+* Spent a summer [SIMD](https://en.wikipedia.org/wiki/SIMD) optimizing various computer vision algorithms.
+* Wrote a [3D snake game](/posts/2016-05-07-snakium-cubed-release.html) in C++/OpenGL and released it.
+* Wrote a [series of blog posts](http://www.skipifzero.com/posts/2016-01-31-volumetric-lighting-1.html) on volumetric lighting.
+* Wrote a [real-time raytracer in CUDA](https://github.com/PetorSFZ/PhantasyEngineTestbed/releases) with some friends.
+* Started writing a general purpose game engine (__PhantasyEngine__), which I still use in some capacity to this day.
+* Did a master's thesis on [CUDA accelerated stereo vision](https://hdl.handle.net/20.500.12380/249761).
+* Graduated with a Master's degree in Computer Science.
+
+# 2018-2019 - Early work years
+
+* Started working as a consultant for [Visionists](https://web.archive.org/web/20170728170258/http://www.visionists.se/).
+	* Implemented some highly optimized algorithms in CUDA for Zenuity.
+* Started learning Vulkan more properly
+	* Read the spec.
+	* At some point evaluated it as a replacement for CUDA at work.
+	* Never ended up using it seriously because I found it too tedious.
+* Learned Direct3D 12.
+* Started writing [a cross-platform GPU API](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) inspired by [BGFX](https://github.com/bkaradzic/bgfx), with D3D12 as the initial implementation.
+	* Ended up never implementing other backends than D3D12, so it's very much incomplete.
+	* I'm still using it to this day.
+* Experimented with cross-compiling __PhantasyEngine__ to Javascript/WebAssembly using [Emscripten](https://github.com/emscripten-core/emscripten).
+	* It worked fairly well, but decided to drop it because I found it limiting to work with the WebGL API's.
+* Finally accepted that creating a general purpose game engine is stupid, started repurposing __PhantasyEngine__ into a game specific engine for my next game project.
+* Started working on my next game project, __Apocatropics__.
+* Tried out [Rust](https://www.rust-lang.org/).
+	* Overall found it a decent and good language
+	* I think you pay a bit too much complexity and don't gain quite enough back.
+	* Not for me personally, but can definitely imagine working in a Rust codebase.
+
+# 2020-now - Later work years
+
+* Currently working at [Hiber](https://hiberworld.com/).
+	* Responsible for starting up and from scratch architecting their next-gen game engine in C++.
+	* The new engine is not live yet, don't judge me from what you see on the link above. ;)
+* Messed around with Apple's Metal.
+	* Not an expert or anything, but I like it aside from interopping Objective-C and C++.
+* Transitioned __Apocatropics__ into a voxel game.
+* Implemented voxel raytracing in HLSL compute shaders.
+	* Still fairly slow, to be optimized (and it definitely can be).
+	* I'm particularly eye:ing [Sparse Voxel DAGs](https://www.cse.chalmers.se/~uffe/HighResolutionSparseVoxelDAGs.pdf) from my friends at Chalmers.
+* Started looking at [Zig](https://ziglang.org/).
+	* A bit new and rough around the edges, but I love the design philosophy.
+	* Avoid complexity, a better C instead of a better C++.
+	* Absolutely amazing compiler that can cross-compile code (including C and C++) really well.
+	* Made a [proposal for vector primitives](https://github.com/ziglang/zig/issues/7295), but later realized they already had something along those lines. Oops.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>
