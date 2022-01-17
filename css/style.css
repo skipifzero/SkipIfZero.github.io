@@ -196,13 +196,31 @@ a:visited
 
 #page-bottom-footer
 {
+	white-space: nowrap;
+	overflow-x: auto;
+}
 
+#page-bottom-right-align
+{
+	float: right;
 }
 
 #page-bottom-footer-text
 {
-	font-size: 2em;
+	font-size: 1.65em;
 	font-weight: 600;
+	display: inline-block;
+}
+
+.page-bottom-logo-icon
+{
+	font-size: 1.65em;
+	display: inline-block;
+	padding-left: 0.3em;
+}
+
+.page-bottom-logo-icon > img {
+	height: 1em;
 }
 
 /* Markdeep overrides */
