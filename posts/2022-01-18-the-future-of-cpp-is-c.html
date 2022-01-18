@@ -1,0 +1,213 @@
+<!-- Copyright Peter Hillerström 2019-2022 (skipifzero) -->
+
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | The Future of C++ is C - 2022-01-08</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-10-05-october-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		The future of C++ is C
+	</div>
+	<div id="page-middle-post-subtitle">
+		Or, how to architect your C++ codebase in a forward compatible manner
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2022-01-18
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
+At this point in my career I have written a lot of C++. I have witnessed a bunch of codebases at various jobs with different design and rules. I have started several codebases myself, and I have changed the way I write C++ significantly many times. One thing for sure, C++ is not one language, it is several languages masquerading as one.
+
+Regardless of what you think of the subset of C++ you use, one thing is clear; things are changing. Several new competitors are starting to show up, with the most well known being of course [Rust](https://www.rust-lang.org/). There's also my personal favourite, [Zig](https://ziglang.org/). This means uncertainty, what language is going to be preferred in the future? Should I use use something else? But what if I choose the wrong language? Will the language I choose even exist in 10 years?
+
+For us system programmers who are used to stability (still fairly easy to compile C code from the 90s), uncertainty is a disaster. This is not Javascript, we expect to be able to compile and run our programs 10 years from now. Stability is king. But how do we keep up with the times when we don't know what language will win out? What language to use when starting a new codebase today?
+
+Well, I have a solution to your problem! To prepare for the future we have to look backwards, to C.
+
+# C, the lingua franca
+
+C is nice, fairly simple language from the 70s. It's also pretty much the lingua franca of the software world. Everything has a C-compiler (well, maybe not all GPUs, but close enough), almost every language can communicate (interop) with C programs. A short (but incomplete) list of programming languages that can interop with C:
+* C++
+* C#
+* Objective-C
+* Java
+* Python
+* Javascript
+* Swift
+* Rust
+* Zig
+
+C++ claims to be an extension of C, and all valid C should also be valid C++. This is not quite true, but it's true enough. There's a pretty nice subset of C that is compatible anywhere, including all C++ compilers. More importantly, C++ has tremendously good tools for interopping with C, and even pretending to be C from the point of view of other programs and languages.
+
+# C-APIs
+
+A C-API is an API a C-library exposes to other programs that link with it. A very simple example:
+
+
+```cpp
+struct Point {
+	int x, y;
+};
+void updatePoint(struct Point* p);
+```
+
+C only has functions (no function overloading, no templates) and simple POD (Plain Old Data) structs. No templates, no methods, no references, no constructors/destructors, no RAII, no function overloading, no inheritance, etc.
+
+In C++ you can export C functions via the `extern "C"` keyword. The API looks like this in C++:
+
+```cpp
+struct Point {
+	int x, y;
+};
+extern "C" void updatePoint(struct Point* p);
+```
+
+But here's the beautiful part, just because the signature of your function is C (`extern "C"`) does not mean that its implementation also has to be. The following is completely valid C++ that can be called from C or any other language that can interop with C:
+
+
+`Example.h`
+```cpp
+#pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Foo is forward declared, caller does not know what it looks like, but can pass around pointers
+// to instances of it.
+struct Foo;
+struct Foo* createFoo(void);
+void deleteFoo(struct Foo* foo);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+```
+
+`Example.cpp`
+```cpp
+#include "Example.h"
+
+struct Bar {
+	int a = 3;
+	virtual int get() { return a; }
+};
+
+// Foo is absolutely not a C object
+struct Foo : Bar {
+	virtual int get() override { return a + 1; }
+};
+
+struct Foo* createFoo(void)
+{
+	// Absolutely not valid C, but is fine because the signature is still C.
+	return new Foo();
+}
+
+void deleteFoo(struct Foo* foo)
+{
+	delete foo;
+}
+```
+
+By now what I'm suggesting should start to be clear. Start your new codebase in C++, but with the caveat that all modules (of some arbitrary size you choose) must have a pure C-API. This way you can switch to another (or several other) languages later on. As long as C is the glue between everything it will all work out.
+
+# Some extra words about modules
+
+It's worth clarifying some things about "modules" because I never described them very carefully. A module is an arbitrarily sized chunk of your program. At its smallest, every cpp file is a module. At its largest, your entire program is a single module. The latter (single program is a module) is probably not super useful if you are trying to gain the most out of this, but it can be a good start for legacy codebases if you are trying to convert them.
+
+Having every cpp file be a module (and thus every header pure C) is very hardcore and is probably not for everyone, it will essentially turn your codebase into a C codebase with some extra nice-to-have syntax in cpp files. Depending on who you ask this might not be a bad thing, but realistically you will probably have to come up with some nice middle ground here.
+
+The last thing to mention about modules is that it is ~very~ important that they DO NOT know anything of each other's internal representation. Because, long term, they can't. When you are calling a C-API you are not supposed to know or think about what language the API is implemented with. It might be C, C++, Objective-C, Zig, Rust, etc. It should not matter. But if you break the abstraction and e.g. include internal headers from inside a module outside of it this will all break down. Some discipline need to be observed here.
+
+# Other advantages with C-APIs
+
+Besides future-proofing there are mutliple other advantages with using C-APIs.
+
+## Keeps complexity down
+
+C++ can easily become very, very complex. Especially if people are using a lot of templates. By separating all modules of your programs with C-APIs you can forcefully keep a lot of that complexity down. A single module may contain tons of templates, but they can never spread beyond that single module because there is no way for them to propagate over a C-API.
+
+## Reason about code, not language concepts
+
+A well-designed C-API is simple to understand. You send in data, and you get data back. You don't have to spend a lot of time understanding how specific language features work, you just have to spend time understanding the API in front of you.
+
+## Faster compile times
+
+C compiles significantly faster than C++, mainly because it doesn't contain language concepts that take a long time for the compiler to work through (templates). By keeping complexity down and enforcing C-API's between modules you are making the job easier for the compiler, resulting in better compile times.
+
+## Potentially better performance
+
+In C it's often easier to reason about the data than C++, because there are less abstractions in the way. Because your overall codebase will become more C-like it will be easier to start using data-oriented design and thus improve your performance.
+
+## Easier to build shared libraries (DLLs)
+
+The C++ ABI (Application Binary Interface) is brittle and changes often between compilers and compiler versions. C's ABI on the other hand is significantly more stable. Building a DLL with one compiler and then calling it from code built with another is more sure to work if your DLL has a C-API.
+
+# Conclusion
+
+I'm sure this will not be enough to convince everyone, but hopefully it has sparked some interest in some readers. :) I'm personally of the opinion that most low-level codebases started today should use C++, but that they should use strict C-APIs on a rather fine level. Maybe not every header, but fairly close to that.
+
+IMO it is a huge liability to go all in on C++ (or Rust, or Zig) without a good plan for how to transition to whatever language becomes dominant in a few years. C++ with C-APIs is a relatively simple way of being prepared, and it has the bonus of bringing tons of other advantages to your codebase.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2019-10-05-october-2019-update.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>
