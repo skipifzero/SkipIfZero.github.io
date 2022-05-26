@@ -59,7 +59,7 @@ Component storage, even really naive solutions, work really well honestly. Yes, 
 
 My reasoning for above claim is that ECS, while better than OOP (Object Oriented Design), is still fairly rigorous in how you can design things. I.e., you become forced to model your logic in an "ECS-way" for it to work at all. By default, this "ECS-way" is usually better performing than OOP. However, if you didn't have an architecture at all you have more freedom in how you model your data, and that way you obviously have more room to design your datastructures in the exact way you need them to be for optimal memory accesses for the logic you need to perform.
 
-And then we have the black sheep in the room, do you even need CPU performance in the first place? In Unity's marketing for their ECS they always show of games with \~millions\~ of entities. That may be cool for some games, but I wager that for a majority of games that is completely overkill. I would go out on a limb and guess that many games could probably get away with 1000 entities or less.
+And then we have the black sheep in the room, do you even need CPU performance in the first place? In Unity's marketing for their ECS they always show of games with **millions** of entities. That may be cool for some games, but I wager that for a majority of games that is completely overkill. I would go out on a limb and guess that many games could probably get away with 1000 entities or less.
 
 So what are we left with then? Well, using ECS to model your game and game logic is still fairly nice overall in my opinion. Because of all the hype the last years it's fairly familiar to many game developers, which is a plus if you are onboarding more people to your project.
 
