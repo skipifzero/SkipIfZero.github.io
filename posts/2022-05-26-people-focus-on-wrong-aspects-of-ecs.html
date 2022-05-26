@@ -1,0 +1,161 @@
+<!-- Copyright Peter Hillerström 2019-2022 (skipifzero) -->
+
+<!-- Header -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8">
+	<title>skipifzero.com | People focus on the wrong aspects of ECS - 2022-05-26</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/png" href="/res/icon.png">
+	<link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<!-- Body -->
+<body>
+
+<!-- Top -->
+<div w3-include-html="/html/top.html"></div>
+
+<!-- Content start -->
+<div id="page-middle"><div class="content-width"><div id="page-middle-content" class="content-padding">
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-top">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2022-01-18-the-future-of-cpp-is-c.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Post header (title, subtitle and date) -->
+<div id="page-middle-post-header">
+	<div id="page-middle-post-title">
+		People focus on the wrong aspects of ECS
+	</div>
+	<div id="page-middle-post-subtitle-date">
+		2022-05-26
+	</div>
+</div>
+
+<!-- Markdown begin -->
+<markdeep>
+
+Today we are going to be talking about ECS, Entity Component Systems. At this point in my career I have implemented 3-4 different ECS systems (of varying quality, most of them bad), and I have seen and been involved with at least 2 shipped codebases using ECS. I do have some knowledge gaps (I only have second hand knowledge of Unity's ECS), but overall I'm fairly confident that I know what I'm talking about.
+
+The main topic today is that I think people (often beginners, but also veterans) tend to focus on the wrong aspects of ECS. This blog post will essentially be a grab bag of topics that I think are important but often missed.
+
+First off, let's start up with a hot take to grab your interest.
+
+# The hot take
+
+***The least interesting aspect of ECS is how you store your entities and components.***
+
+Didn't expect that did you? I can already hear my imaginary audience saying "But that's where the performance comes from!" or "But data-oriented design?".
+
+Component storage, even really naive solutions, work really well honestly. Yes, there are gains to be made by improving the data structures and maybe have different types of storage for different components depending on how common they are. But the truth is, if you really want the most optimal memory access patterns you probably shouldn't be using ECS in the first place.
+
+My reasoning for above claim is that ECS, while better than OOP (Object Oriented Design), is still fairly rigorous in how you can design things. I.e., you become forced to model your logic in an "ECS-way" for it to work at all. By default, this "ECS-way" is usually better performing than OOP. However, if you didn't have an architecture at all you have more freedom in how you model your data, and that way you obviously have more room to design your datastructures in the exact way you need them to be for optimal memory accesses for the logic you need to perform.
+
+And then we have the black sheep in the room, do you even need CPU performance in the first place? In Unity's marketing for their ECS they always show of games with \~millions\~ of entities. That may be cool for some games, but I wager that for a majority of games that is completely overkill. I would go out on a limb and guess that many games could probably get away with 1000 entities or less.
+
+So what are we left with then? Well, using ECS to model your game and game logic is still fairly nice overall in my opinion. Because of all the hype the last years it's fairly familiar to many game developers, which is a plus if you are onboarding more people to your project.
+
+But then, what is the more interesting aspects of ECS?
+
+# ECS is incomplete
+
+ECS, as it is usually stated or explained, is woefully incomplete and/or vague. Most explanations/tutorials I have read usually goes into depth explaining how entities and components work, and then sort of skip the rest. And as stated above, the "EC" part of ECS is the least interesting aspect.
+
+In particular, it usually misses out on on absolutely necessary "extensions" (singleton components). Systems has an incredible amount of aspects to them that are usually not mentioned (in particular scheduling and multi-threading, which is also very important for performance). And importantly, it's sort of rare that people talk about what an ECS is actually used for and how you integrate one into your engine.
+
+# Singleton Components
+
+This is, I think, the most obvious (and frankly necessary) extension to ECS. Basically, in addition to the components connected to entities, we also have singleton-components.  Singleton components are global and not connected to any specific entity.
+
+E.g., maybe you have a `CameraSingleton` which holds your camera data because your engine doesn't support multiple cameras at the same time. Or maybe you have a `PlayerState` singleton which points out some player only state and maybe which entity is the player-controlled entity.
+
+Without singleton components, modelling problems in an "ECS-way" becomes extremely annoying. Without it, you end up having to over-generalize your logic to a ridiculus degree. Besides being unnecessary (your engine probably can't handle the generalized case anyway), you usually end up with hacks where you have component types that are only assigned to a single entity at a time anyway.
+
+# What is a system
+
+Systems are usually very vaguely defined when ECS is explained, which is a problem when they are easily the most complex and interesting aspect of the whole thing. In my opinion, there is only a single **good** way to define a system. **A system is a pure function with no state of its own.**
+
+Sometimes it's explained that a system is always a loop over all entities with a specific set of components. This is also wrong. A system is a pure function and may do whatever it wants, maybe it only operates on some singleton components and doesn't even touch the entities. Or maybe it loops over entities with specific set of components more than one time. Or maybe it only operates on a few specific entities whose handles are stored in a singleton component.
+
+I have seen many examples where systems have state of their own (usually `System` is some sort of abstract base class, and all systems inherits from it and then add members with stuff they need). Don't do that, it defeats the whole point. I think one important reason why this happens is because of the lack of singleton components, 99% of all state that one would place "in a system" actually belongs there.
+
+And as a sidenote, "system" is the worst possible name for what it is because it's such an overloaded term and causes a lot of confusion. E.g., if you have a game engine it probably has a "physics (sub)system", but that system might consist of multiple "ecs-systems" (=functions).
+
+# How often do your systems run?
+
+In games it's very common to run game logic at a fixed timestep (e.g. 60hz) regardless of your framerate, sometimes called a (simulation) tick. Depending on your framerate, you may have multiple ticks, or none at all, for a given frame.
+
+So then the obvious question becomes, how often do your systems run? Do they run every tick or every frame? If they run per tick, then obviously you can't do rendering in an ECS system, because you could end up rendering many times or none at all for a given frame.
+
+Maybe you have both per-tick and per-frame systems, and that's probably fine. In practice I have observed that this requires more careful testing, as some logic has a tendency to break at other framerates if e.g. a per-frame system expects there to always have been a tick update between each time it has run.
+
+But hey, maybe you have logic that should run at different tick rates? Maybe something that should only run 5 times per frame? No obvious answers here, but personally I find it easy enough to just add a check in the beginning of a per-tick system to see if it's supposed to run this tick or not for such cases.
+
+# ECS and your engine
+
+What exactly are you using your ECS for? This might seem like a stupid question, but it's actually very complex in practice. I sometimes see people claiming that their engine has an "ECS architecture". As far as I can tell, that would essentially mean that all your engine functionality is crammed into the ECS framework. To me, this sounds very unnecessary. Most non-game-logic parts of your engine should, imo, not care about entities or components at all. Imagine a scenario where you are doing some async asset loading, should every async task be an entity or something? That's really weird.
+
+The most reasonable split (imo) I have found so far is to only use ECS for game logic and game state. Rendering, networking, audio, resources (meshes, textures, sounds, etc) lives outsides ECS and follows whatever your overall engine architecture is. There are a couple of intersection points (e.g., in order to render an entity you do need to know what assets to use). Generally what I find to work best is to let the outside systems inspect (and sometimes modify) the ECS freely, but let the ECS be unaware of outside systems.
+
+This only scratches the surface and there are many more aspects of interest here. It would be significantly more interesting to hear people talk about this instead of yet another blog post about how to store your components in the most efficient fashion.
+
+# Scheduling systems
+
+Multi-threading is (unfortunately?) a thing, and in order to get the most performance out of a CPU it is crucial to run things in parallel. Overall, I think that correctly and efficiently multi-threading an application is a significantly harder problem than improving memory layout for cache reasons. For this reason I find it strange that there is so much focus on entities and components (the easy part, memory layout) and so little focus on the hard part (systems and scheduling). If you do ECS correctly the architecture will actually help you to parallelize code, which is why I think it should be talked about more often!
+
+Remember when I said systems should be pure functions? This is why. Given that we have 2 different pure functions (with no side-effects), as long as they don't write to data that the other function accesses they can safely be run in parallel.
+
+So a system actually requires a secondary component in order for scheduling to work, they need some kind of manifest that specifies what data (components, singleton components) they are going to access, and how they are going to access them (read or write).
+
+In addition, some systems will likely want to be internally multi-threaded (e.g. expensive physics updates). How exactly that should work API-wise is not entirely obvious (many options), but it should be a pretty clean extension of above. If we want to be able to schedule other systems in parallel with our multi-threaded system we still need a manifest with what data is accessed.
+
+All in all, there's an incredible wealth of topics to investigate here. All of it way harder and way more interesting than component storage.
+
+# Conclusion
+
+So that's it for this grab bag of topics. The main takeaway is that the EC part of ECS is somewhat uninteresting because the harder and more crucial parts touch systems and scheduling.
+
+If you are thinking about using ECS in your engine and are planning to look for libraries on Github then I have a word of warning. Many "ECS libraries" on Github (even the really popular ones) aren't really "ECS libraries" at all. They are just entity-component storage libraries. Many of these are absolutely fine, but beware that you then have to do the hard part yourself (systems + scheduling). In other words, assume most of them are doing just fine in the storage department and look for the ones with a well thought-through scheduling solution.
+
+Any comments or thoughts? Send a [tweet](https://twitter.com/petorsfz), I also have [Mastodon](https://mastodon.gamedev.place/@PetorSFZ) I haven't quite decided if I should use in any significant fashion or not yet.
+
+
+<!-- Markdown end -->
+</markdeep>
+
+<!-- Content navigation -->
+<div class="page-middle-post-navigation-bottom">
+	<div class="page-middle-post-navigation-previous">
+		<a href="/posts/2022-01-18-the-future-of-cpp-is-c.html">< Previous</a>
+	</div>
+	<!--<div class="page-middle-post-navigation-next">
+		<a href="inserthere">Next ></a>
+	</div>-->
+</div>
+
+<!-- Content end -->
+</div></div></div>
+
+<!-- Bottom -->
+<div w3-include-html="/html/bottom.html"></div>
+
+<!-- Include HTML -->
+<script src="/js/w3/w3.js"></script>
+<script> w3.includeHTML(); </script>
+
+<!-- Markdeep -->
+<script>
+	window.markdeepOptions = {mode: 'html', tocStyle: 'none'};
+</script>
+<script src="/js/markdeep/markdeep.min.js"></script>
+
+</body>
+</html>
