@@ -55,43 +55,41 @@ This page is a summary of my career so far, mainly with regards to game developm
 * Did a master's thesis on [CUDA accelerated stereo vision](https://hdl.handle.net/20.500.12380/249761).
 * Graduated with a Master's degree in Computer Science.
 
-# 2018-2019 - Early work years
+# 2018-2021 - Early work years
 
-* Started working as a consultant for [Visionists](https://web.archive.org/web/20170728170258/http://www.visionists.se/).
+* Worked as a consultant for [Visionists](https://web.archive.org/web/20170728170258/http://www.visionists.se/) (2018-2019).
 	* Implemented some highly optimized algorithms in CUDA for Zenuity.
 * Started learning Vulkan more properly
-	* Read the spec.
-	* At some point evaluated it as a replacement for CUDA at work.
+	* Read the spec, and later evaluated it as a replacement for CUDA at work.
 	* Never ended up using it seriously because I found it too tedious.
 * Learned Direct3D 12.
-* Started writing [a cross-platform GPU API](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) inspired by [BGFX](https://github.com/bkaradzic/bgfx), with D3D12 as the initial implementation.
-	* Ended up never implementing other backends than D3D12, so it's very much incomplete.
-	* I'm still using it to this day.
-* Experimented with cross-compiling __PhantasyEngine__ to Javascript/WebAssembly using [Emscripten](https://github.com/emscripten-core/emscripten).
+* Started writing [a cross-platform GPU API](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) inspired by [BGFX](https://github.com/bkaradzic/bgfx).
+	* Still using it, but never ended up implementing other backends than D3D12.
+* Experimented with cross-compiling my game engine __PhantasyEngine__ to Javascript/WebAssembly using [Emscripten](https://github.com/emscripten-core/emscripten).
 	* It worked fairly well, but decided to drop it because I found it limiting to work with the WebGL API's.
 * Finally accepted that creating a general purpose game engine is stupid, started repurposing __PhantasyEngine__ into a game specific engine for my next game project.
 * Started working on my next game project, __Apocatropics__.
+	* Later transitioned this into a voxel game.
 * Tried out [Rust](https://www.rust-lang.org/).
 	* Overall found it a decent and good language
 	* I think you pay a bit too much complexity and don't gain quite enough back.
 	* Not for me personally, but can definitely imagine working in a Rust codebase.
-
-# 2020-now - Later work years
-
-* Currently working at [Hiber](https://hiberworld.com/).
-	* Responsible for starting up and from scratch architecting their next-gen game engine in C++.
-	* The new engine is not live yet, don't judge me from what you see on the link above. ;)
 * Messed around with Apple's Metal.
 	* Not an expert or anything, but I like it aside from interopping Objective-C and C++.
-* Transitioned __Apocatropics__ into a voxel game.
-* Implemented voxel raytracing in HLSL compute shaders.
-	* Still fairly slow, to be optimized (and it definitely can be).
-	* I'm particularly eye:ing [Sparse Voxel DAGs](https://www.cse.chalmers.se/~uffe/HighResolutionSparseVoxelDAGs.pdf) from my friends at Chalmers.
+* Worked as a game engine/rendering engineer at Hiber (2019-2022)
+	* Hiberworld is basically a Roblox clone, except it's made using web tech and runs directly in the browser with no install.
+	* Was responsible for starting up and from scratch architecting their next-gen cross-platform game engine in C++.
+	* The new engine was shipped literally a week before I left, I have not keept up with it since then.
+	* I ended up qutting for a myriad of reasons, the primary one begin that Hiber pivoted towards NFTs and blockchain.
 * Started looking at [Zig](https://ziglang.org/).
-	* A bit new and rough around the edges, but I love the design philosophy.
-	* Avoid complexity, a better C instead of a better C++.
-	* Absolutely amazing compiler that can cross-compile code (including C and C++) really well.
-	* Made a [proposal for vector primitives](https://github.com/ziglang/zig/issues/7295), but later realized they already had something along those lines. Oops.
+	* I love the design philosophy, and I have high hopes for this language.
+
+# 2022 - ???? - Current
+
+* Worked full-time on __Apocatropics__ for a few months after I quit Hiber (2022)
+	* Implemented voxel raytracing in HLSL compute shaders, and managed to make it pretty fast!
+	* Tried out some interesting tech, including [Sparse Voxel DAGs](https://www.cse.chalmers.se/~uffe/HighResolutionSparseVoxelDAGs.pdf) from my friends at Chalmers.
+* Working as game engine engineer at [Media Molecule](https://www.mediamolecule.com/) (2022 - ????)
 
 
 <!-- Markdown end -->
